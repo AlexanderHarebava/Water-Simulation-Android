@@ -12,6 +12,9 @@ Real-time 3D fluid simulation Android application and Live Wallpaper built with 
 [Screen_recording_20260907_010743.webm](../../Desktop/Screen_recording_20260907_010743.webm)
 
 [Screen_recording_20260907_010826.webm](../../Desktop/Screen_recording_20260907_010826.webm)
+
+
+
 ## Project Structure
 
 ```
@@ -41,7 +44,6 @@ waterc/
             │       ├── StaggeredGrid.h       # MAC (Marker-and-Cell) Staggered Grid structure
             │       └── types.h               # Data structures, Field grids & labels
             └── java/com/example/waterc/      # Kotlin Android Application & UI
-                ├── ui/theme/                 # Jetpack Compose Theme (Color, Type, Theme)
                 ├── FluidGLSurfaceView.kt     # Custom GLSurfaceView component
                 ├── FluidSimulation.kt        # JNI / Kotlin interface to NDK engine
                 ├── FluidWallpaperService.kt # Android Live Wallpaper Service setup
@@ -71,6 +73,7 @@ waterc/
 - **Rendering**: Volumetric Ray Marching shader (`GLRenderer.cpp`) rendering a 3D scalar density texture with physically-based optical models.
 ---
 
+## Also you need download Eigen and put here app/src/main/cpp
 
 ## 📜 License
 

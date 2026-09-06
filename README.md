@@ -1,3 +1,7 @@
+
+
+<img width="100" alt="Component 2 (1)" src="https://github.com/user-attachments/assets/6d361e62-78b2-4ab1-abd0-d0bc0018a466" />
+
 # Water Wallpaper Box - 3D Water Simulation & Live Wallpaper for Android
 
 Real-time 3D fluid simulation Android application and Live Wallpaper built with Kotlin, Jetpack Compose and C++, **OpenGL ES 3.1** and **GLES Compute Shaders**.

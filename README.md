@@ -108,7 +108,7 @@ waterc/
 
 ## Also you need download Eigen and put here app/src/main/cpp
 
-## 📜 License
+## License
 
 **Apache License 2.0**.
 

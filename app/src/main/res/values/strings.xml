@@ -1,0 +1,47 @@
+<resources>
+    <string name="app_name" translatable="false">Water Wallpaper Box</string>
+    <string name="wallpaper_label">С++ Water Simulation on Android</string>
+    <string name="wallpaper_description">Interactive 3D fluid simulation: the wallpaper fills the entire screen, with gravity responding to device tilt. The camera is static.</string>
+    <string name="wallpaper_settings_title">waterc Wallpaper Settings</string>
+
+    <string name="author_credit">Author Alexander Harebava</string>
+    <string name="menu_title">С++ Water Simulation on Android</string>
+    <string name="menu_grid_desc">Fluid detail level. Higher values look better, but increase GPU load. Better use 32</string>
+    <string name="menu_apply_button">Apply Live Wallpaper</string>
+    <string name="menu_full_settings_button">All Settings</string>
+    <string name="menu_close">Close Menu</string>
+    <string name="menu_open">Open Menu</string>
+
+
+    <string name="settings_screen_title">Simulation Settings</string>
+    <string name="settings_save_button">Save &amp; Close</string>
+    <string name="settings_reset_button">Reset to Defaults</string>
+
+    <string name="section_water_color">Water Color</string>
+    <string name="section_absorption">Turbidity &amp; Light Absorption</string>
+    <string name="section_specular">Highlight Intensity</string>
+    <string name="section_raymarch">Render Quality (Steps)</string>
+    <string name="section_gravity">Gravity Strength</string>
+    <string name="section_water_amount">Water Volume</string>
+    <string name="section_damping">Fluid Viscosity</string>
+    <string name="section_tilt">Tilt Sensitivity</string>
+    <string name="section_render_scale">Render Resolution</string>
+    <string name="section_target_fps">Target Frame Rate</string>
+    <string name="section_grid_size">Simulation Resolution</string>
+    <string name="section_accelerometer">Tilt Control</string>
+
+
+    <string name="hint_water_amount">Volume of water in the initial sphere. 1.00 is normal.</string>
+    <string name="hint_grid_size">Higher values yield finer fluid detail, but demand more performance.</string>
+    <string name="hint_accel_toggle">Tilting the device controls flow</string>
+
+
+    <string name="perf_label_frame">FRAME</string>
+    <string name="perf_label_cpu">CPU</string>
+    <string name="perf_label_gpu">GPU</string>
+    <string name="perf_label_ram">RAM</string>
+    <string name="perf_label_battery">BAT</string>
+    <string name="perf_na">N/A</string>
+    <string name="perf_charging">charging</string>
+    <string name="perf_full">full</string>
+</resources>

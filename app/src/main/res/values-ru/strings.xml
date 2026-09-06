@@ -1,0 +1,49 @@
+<resources>
+
+
+
+    <string name="wallpaper_label">Симуляция воды на C++</string>
+    <string name="wallpaper_description">Интерактивная 3D-симуляция жидкости: обои заполняют весь экран, гравитация реагирует на наклон устройства. Камера статична.</string>
+    <string name="wallpaper_settings_title">Настройки обоев waterc</string>
+
+    <string name="author_credit">Автор Alexander Harebava</string>
+    <string name="menu_title">Симуляция воды на C++. На Андроид</string>
+    <string name="menu_grid_desc">Детализация жидкости. Выше значение - красивее, но больше нагрузка на GPU. Лучше использовать 32</string>
+    <string name="menu_apply_button">Применить живые обои</string>
+    <string name="menu_full_settings_button">Полные настройки</string>
+    <string name="menu_close">Закрыть меню</string>
+    <string name="menu_open">Открыть меню</string>
+
+
+    <string name="settings_screen_title">Настройки симуляции</string>
+    <string name="settings_save_button">Сохранить и закрыть</string>
+    <string name="settings_reset_button">Сбросить на стандартные</string>
+
+
+    <string name="section_water_color">Цвет воды</string>
+    <string name="section_absorption">Мутность и поглощение света</string>
+    <string name="section_specular">Интенсивность бликов</string>
+    <string name="section_raymarch">Качество рендеринга (шаги)</string>
+    <string name="section_gravity">Сила гравитации</string>
+    <string name="section_water_amount">Объем воды</string>
+    <string name="section_damping">Вязкость жидкости</string>
+    <string name="section_tilt">Чувствительность наклона</string>
+    <string name="section_render_scale">Разрешение рендера</string>
+    <string name="section_target_fps">Целевая частота кадров</string>
+    <string name="section_grid_size">Разрешение симуляции</string>
+    <string name="section_accelerometer">Управление наклоном</string>
+
+
+    <string name="hint_water_amount">Объём воды в начальной сфере. 1.00 - норма.</string>
+    <string name="hint_grid_size">Выше значение - детальнее жидкость, но тяжелее для устройства.</string>
+    <string name="hint_accel_toggle">Наклон устройства управляет течением</string>
+
+    <string name="perf_label_frame">КАДР</string>
+    <string name="perf_label_cpu">CPU</string>
+    <string name="perf_label_gpu">GPU</string>
+    <string name="perf_label_ram">RAM</string>
+    <string name="perf_label_battery">АКБ</string>
+    <string name="perf_na">н/д</string>
+    <string name="perf_charging">зарядка</string>
+    <string name="perf_full">заряжена</string>
+</resources>

@@ -1,0 +1,33 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.BIND_WALLPAPER" tools:ignore="ProtectedPermissions"/>
+    <uses-permission android:name="android.permission.SET_WALLPAPER"/>
+
+    <uses-feature android:name="android.software.live_wallpaper" android:required="false"/>
+    <uses-feature android:name="android.hardware.sensor.gyroscope" android:required="false"/>
+    <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="false"/>
+    <application android:allowBackup="true" android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules" android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name" android:roundIcon="@mipmap/ic_launcher_round" android:supportsRtl="true"
+        android:theme="@style/Theme.Waterc">
+        <activity android:name=".MainActivity" android:screenOrientation="portrait" android:exported="true"
+            android:label="@string/app_name" android:theme="@style/Theme.Waterc"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".WallpaperSettingsActivity" android:exported="true"
+            android:label="@string/wallpaper_settings_title" android:theme="@style/Theme.Waterc"/>
+
+        <service android:name=".FluidWallpaperService" android:exported="true"
+            android:label="@string/wallpaper_label" android:permission="android.permission.BIND_WALLPAPER">
+            <intent-filter>
+                <action android:name="android.service.wallpaper.WallpaperService"/>
+            </intent-filter>
+            <meta-data android:name="android.service.wallpaper" android:resource="@xml/waterc_wallpaper"/>
+        </service>
+    </application>
+</manifest>

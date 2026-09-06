@@ -5,13 +5,7 @@ Real-time 3D fluid simulation Android application and Live Wallpaper built with 
 ---
 # Results
 
-[Screen_recording_20260907_010249.webm](../../Desktop/Screen_recording_20260907_010249.webm)
 
-[Screen_recording_20260907_010420.webm](../../Desktop/Screen_recording_20260907_010420.webm)
-
-[Screen_recording_20260907_010743.webm](../../Desktop/Screen_recording_20260907_010743.webm)
-
-[Screen_recording_20260907_010826.webm](../../Desktop/Screen_recording_20260907_010826.webm)
 
 
 

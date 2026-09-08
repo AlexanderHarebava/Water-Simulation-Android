@@ -58,7 +58,7 @@ class FpsMeter(private val windowMs: Long = 1_000L) {
         val count = list.size - 1
 
         return Snapshot(
-            fps = list.size * 1000f / windowMs,
+            fps = count * 1000f / windowMs,
             avgMs = (sum / count).toFloat(),
             minMs = min.toFloat(),
             maxMs = max.toFloat(),

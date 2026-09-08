@@ -7,6 +7,7 @@ import android.opengl.EGLDisplay
 import android.opengl.EGLSurface
 import android.util.Log
 import android.view.SurfaceHolder
+import com.example.waterc.WatercSettings.Companion.effectiveGridSize
 
 class WallpaperEglThread(
     private val holder: SurfaceHolder,
@@ -255,7 +256,12 @@ class WallpaperEglThread(
                     curHeight = wantH
 
                     if (!simInited) {
-                        simulation.init(settings.gridSize)
+                        simulation.init(settings.effectiveGridSize(), settings.simMode)
+
+                        if (settings.simMode == FluidSimulation.MODE_MPM) {
+                            simulation.setParticleCount(settings.particleCount)
+                        }
+
                         simInited = true
                     }
 
@@ -267,12 +273,48 @@ class WallpaperEglThread(
                     )
                 }
 
-                if (eglSurface != EGL14.EGL_NO_SURFACE && simInited) {
 
-                    if (appliedSettings != settings) {
-                        simulation.applyVisualSettings(settings)
-                        appliedSettings = settings
+                if (eglSurface != EGL14.EGL_NO_SURFACE && simInited) {
+                    val newSettings = settings
+                    val oldSettings = appliedSettings
+
+                    val needRecreateSim =
+                        oldSettings != null &&
+                                (
+                                        oldSettings.simMode != newSettings.simMode ||
+                                                oldSettings.effectiveGridSize() != newSettings.effectiveGridSize()
+                                        )
+
+                    if (needRecreateSim) {
+                        Log.i(
+                            TAG,
+                            "Sim recreate: mode ${oldSettings!!.simMode} -> ${newSettings.simMode}, " +
+                                    "grid ${oldSettings.effectiveGridSize()} -> ${newSettings.effectiveGridSize()}"
+                        )
+
+                        simulation.destroy()
+                        simulation.init(newSettings.effectiveGridSize(), newSettings.simMode)
+
+                        if (newSettings.simMode == FluidSimulation.MODE_MPM) {
+                            simulation.setParticleCount(newSettings.particleCount)
+                        }
+
+                        simulation.resize(curWidth, curHeight)
+                        simulation.applyVisualSettings(newSettings)
+
+                        appliedSettings = newSettings
+                    } else if (oldSettings != newSettings) {          // FIX: только при изменении
+                        if (
+                            newSettings.simMode == FluidSimulation.MODE_MPM &&
+                            oldSettings != null &&
+                            newSettings.particleCount != oldSettings.particleCount
+                        ) {
+                            simulation.setParticleCount(newSettings.particleCount)
+                        }
+                        simulation.applyVisualSettings(newSettings)
+                        appliedSettings = newSettings
                     }
+
 
                     val frameStart = System.nanoTime()
 
@@ -310,7 +352,7 @@ class WallpaperEglThread(
                     val elapsed = frameEnd - frameStart
 
                     val fps = settings.targetFps.coerceIn(15, 120).toLong()
-                    val frameIntervalNs = 1_00_00_00L / fps
+                    val frameIntervalNs = 1_000_000_000L / fps
 
                     val sleepNs = frameIntervalNs - elapsed
 
@@ -324,17 +366,23 @@ class WallpaperEglThread(
                 }
             }
         } finally {
+            // Уничтожаем симуляцию, пока EGL-контекст ещё текущий,
+            // иначе glDelete* из другого потока молча не сработают.
+            try {
+                simulation.destroy()
+            } catch (t: Throwable) {
+                Log.e(TAG, "simulation destroy failed", t)
+            }
+
             EGL14.eglMakeCurrent(
                 display,
                 EGL14.EGL_NO_SURFACE,
                 EGL14.EGL_NO_SURFACE,
                 EGL14.EGL_NO_CONTEXT
             )
-
             if (eglSurface != EGL14.EGL_NO_SURFACE) {
                 EGL14.eglDestroySurface(display, eglSurface)
             }
-
             EGL14.eglDestroyContext(display, context)
             EGL14.eglTerminate(display)
         }

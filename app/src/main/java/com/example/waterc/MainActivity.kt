@@ -51,14 +51,33 @@ class MainActivity : ComponentActivity() {
                             fpsMeter = fpsMeter,
                             modifier = Modifier.align(Alignment.TopStart)
                         )
-
                         WallpaperMenu(
                             initialGridSize = currentSettings.gridSize,
+                            initialSimMode = currentSettings.simMode,
+                            initialParticleCount = currentSettings.particleCount,
+                            initialMpmRenderStyle = currentSettings.mpmRenderStyle,
                             onGridSizeSelected = { size ->
-                                glView?.setGridSize(size)
+                                val newSettings = currentSettings.copy(gridSize = size)
+                                currentSettings = newSettings
+                                glView?.applySettings(newSettings)
                             },
-                            onApplyClicked = { size ->
-                                applyLiveWallpaper(size)
+                            onSimModeSelected = { mode ->
+                                val newSettings = currentSettings.copy(simMode = mode)
+                                currentSettings = newSettings
+                                glView?.applySettings(newSettings)
+                            },
+                            onParticleCountSelected = { count ->
+                                val newSettings = currentSettings.copy(particleCount = count)
+                                currentSettings = newSettings
+                                glView?.applySettings(newSettings)
+                            },
+                            onMpmRenderStyleSelected = { style ->
+                                val newSettings = currentSettings.copy(mpmRenderStyle = style)
+                                currentSettings = newSettings
+                                glView?.applySettings(newSettings)
+                            },
+                            onApplyClicked = {
+                                applyLiveWallpaper(currentSettings)
                             },
                             onOpenSettings = {
                                 startActivity(
@@ -76,10 +95,9 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun applyLiveWallpaper(gridSize: Int) {
-        val settings = WatercSettings.load(this).copy(gridSize = gridSize)
-
-        WatercSettings.save(this, settings, synchronous = true)
+    private fun applyLiveWallpaper(settingsToApply: WatercSettings) {
+        WatercSettings.save(this, settingsToApply, synchronous = true)
+        currentSettings = settingsToApply
 
         val component = ComponentName(this, FluidWallpaperService::class.java)
 
@@ -90,7 +108,6 @@ class MainActivity : ComponentActivity() {
                     component
                 )
             }
-
             startActivity(intent)
         } catch (e: ActivityNotFoundException) {
             try {

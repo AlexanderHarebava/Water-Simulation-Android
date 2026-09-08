@@ -19,15 +19,23 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun WallpaperMenu(
     initialGridSize: Int,
+    initialSimMode: Int,
+    initialParticleCount: Int,
+    initialMpmRenderStyle: Int,
     onGridSizeSelected: (Int) -> Unit,
-    onApplyClicked: (Int) -> Unit,
+    onSimModeSelected: (Int) -> Unit,
+    onParticleCountSelected: (Int) -> Unit,
+    onMpmRenderStyleSelected: (Int) -> Unit,
+    onApplyClicked: () -> Unit,
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
-) {
+){
     var expanded by remember { mutableStateOf(false) }
     var gridSize by remember { mutableIntStateOf(initialGridSize) }
     var textInput by remember { mutableStateOf(initialGridSize.toString()) }
-
+    var simMode by remember { mutableIntStateOf(initialSimMode) }
+    var particleCount by remember { mutableIntStateOf(initialParticleCount) }
+    var mpmRenderStyle by remember { mutableIntStateOf(initialMpmRenderStyle) }
     Column(
         modifier = modifier
             .navigationBarsPadding()
@@ -54,57 +62,131 @@ fun WallpaperMenu(
                         color = MaterialTheme.colorScheme.onSurface
                     )
 
+                    // === Режим симуляции ===
+                    Text("Режим симуляции", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        FilterChip(
+                            selected = simMode == 0,
+                            onClick = { simMode = 0; onSimModeSelected(0) },
+                            label = { Text("Euler (GPU)", fontSize = 12.sp) },
+                            modifier = Modifier.weight(1f)
+                        )
+                        FilterChip(
+                            selected = simMode == 1,
+                            onClick = { simMode = 1; onSimModeSelected(1) },
+                            label = { Text("MLS-MPM", fontSize = 12.sp) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                     Text(
-                        text = stringResource(R.string.menu_grid_desc),
-
-                        fontSize = 11.sp,
-                        lineHeight = 15.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    Text(
-                        text = "Grid size: $gridSize",
-                        fontSize = 14.sp,
+                        text = "Стиль воды (MLS-MPM)",
+                        fontSize = 13.sp,
                         color = MaterialTheme.colorScheme.onSurface
                     )
 
-                    Slider(
-                        value = gridSize.toFloat(),
-                        onValueChange = { v ->
-                            gridSize = v.toInt().coerceIn(16, 128)
-                            textInput = gridSize.toString()
-                            onGridSizeSelected(gridSize)
-                        },
-                        valueRange = 16f..128f,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        FilterChip(
+                            selected = mpmRenderStyle == 0,
+                            onClick = {
+                                mpmRenderStyle = 0
+                                onMpmRenderStyleSelected(0)
+                            },
+                            label = { Text("Объём", fontSize = 12.sp) },
+                            modifier = Modifier.weight(1f)
+                        )
 
-                    OutlinedTextField(
-                        value = textInput,
-                        onValueChange = { newVal ->
-                            textInput = newVal
-
-                            val parsed = newVal.toIntOrNull()
-
-                            if (parsed != null && parsed in 16..128) {
-                                gridSize = parsed
+                        FilterChip(
+                            selected = mpmRenderStyle == 1,
+                            onClick = {
+                                mpmRenderStyle = 1
+                                onMpmRenderStyleSelected(1)
+                            },
+                            label = { Text("Сферы", fontSize = 12.sp) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    // === Условные контролы ===
+                    if (simMode == 0) {
+                        // Euler: GridSize
+                        Text(
+                            text = stringResource(R.string.menu_grid_desc),
+                            fontSize = 11.sp,
+                            lineHeight = 15.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "Grid size: $gridSize",
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Slider(
+                            value = gridSize.toFloat(),
+                            onValueChange = { v ->
+                                gridSize = v.toInt().coerceIn(16, 128)
+                                textInput = gridSize.toString()
                                 onGridSizeSelected(gridSize)
+                            },
+                            valueRange = 16f..128f,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        OutlinedTextField(
+                            value = textInput,
+                            onValueChange = { newVal ->
+                                textInput = newVal
+                                val parsed = newVal.toIntOrNull()
+                                if (parsed != null && parsed in 16..64) {
+                                    gridSize = parsed
+                                    onGridSizeSelected(gridSize)
+                                }
+                            },
+                            label = { Text(stringResource(R.string.section_grid_size) + " (16–128)") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    } else {
+                        // MPM: ParticleCount
+                        Text(
+                            text = "Количество частиц (MLS-MPM)",
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            listOf(25000, 40000, 70000).forEach { count ->
+                                val label = when (count) {
+                                    25000 -> "25K"
+                                    40000 -> "40K"
+                                    70000 -> "70K"
+                                    else -> "$count"
+                                }
+                                FilterChip(
+                                    selected = particleCount == count,
+                                    onClick = {
+                                        particleCount = count
+                                        onParticleCountSelected(count)
+                                    },
+                                    label = { Text(label, fontSize = 12.sp) },
+                                    modifier = Modifier.weight(1f)
+                                )
                             }
-                        },
-                        label = { Text(stringResource(R.string.section_grid_size) + " (16–128)") },
-
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                        }
+                    }
 
                     Button(
-                        onClick = { onApplyClicked(gridSize) },
+                        onClick = { onApplyClicked() },
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(stringResource(R.string.menu_apply_button))
                     }
-
                     OutlinedButton(
                         onClick = onOpenSettings,
                         modifier = Modifier.fillMaxWidth()
@@ -114,7 +196,6 @@ fun WallpaperMenu(
                 }
             }
         }
-
         SmallFloatingActionButton(
             onClick = { expanded = !expanded },
             containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -125,7 +206,6 @@ fun WallpaperMenu(
                 contentDescription = stringResource(
                     if (expanded) R.string.menu_close else R.string.menu_open
                 )
-
             )
         }
     }

@@ -26,6 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -77,11 +78,13 @@ class WallpaperSettingsActivity : ComponentActivity() {
     }
 }
 
+// === ЗАМЕНА тела SettingsScreen ===
 @Composable
 private fun SettingsScreen(
     initial: WatercSettings,
     onSave: (WatercSettings) -> Unit,
 ) {
+    var mpmGridSize by remember { mutableIntStateOf(initial.mpmGridSize) }
     val context = LocalContext.current
     var gridSize by remember { mutableIntStateOf(initial.gridSize) }
     var accelEnabled by remember { mutableStateOf(initial.accelEnabled) }
@@ -97,42 +100,34 @@ private fun SettingsScreen(
     var tiltSensitivity by remember { mutableFloatStateOf(initial.tiltSensitivity) }
     var renderScale by remember { mutableFloatStateOf(initial.renderScale) }
     var targetFps by remember { mutableIntStateOf(initial.targetFps) }
+    var simSpeed by remember { mutableFloatStateOf(initial.simSpeed) }
+    var mpmWaterR by remember { mutableFloatStateOf(initial.mpmWaterR) }
+    var mpmWaterG by remember { mutableFloatStateOf(initial.mpmWaterG) }
+    var mpmWaterB by remember { mutableFloatStateOf(initial.mpmWaterB) }
+    var mpmWaterOpacity by remember { mutableFloatStateOf(initial.mpmWaterOpacity) }
+    var mpmParticleRadius by remember { mutableFloatStateOf(initial.mpmParticleRadius) }
+    var mpmRenderStyle by remember { mutableIntStateOf(initial.mpmRenderStyle) }
+    var mpmTouchStrength by remember { mutableFloatStateOf(initial.mpmTouchStrength) }
+    var simMode by remember { mutableIntStateOf(initial.simMode) }
+    var scenario by remember { mutableIntStateOf(initial.scenario) }
+    var particleCount by remember { mutableIntStateOf(initial.particleCount) }
 
     fun currentSettings(): WatercSettings {
         return WatercSettings(
-            waterR = waterR,
-            waterG = waterG,
-            waterB = waterB,
-            absorption = absorption,
-            specular = specular,
-            volSteps = volSteps,
-            gravityStrength = gravityStrength,
-            damping = damping,
-            tiltSensitivity = tiltSensitivity,
-            renderScale = renderScale,
-            targetFps = targetFps,
+            waterR = waterR, waterG = waterG, waterB = waterB,
+            absorption = absorption, specular = specular,
+            simMode = simMode, scenario = scenario, simSpeed = simSpeed,
+            volSteps = volSteps, gravityStrength = gravityStrength,
+            damping = damping, tiltSensitivity = tiltSensitivity,
+            renderScale = renderScale, targetFps = targetFps,
             gridSize = gridSize,
-            accelEnabled = accelEnabled,
-            waterAmount = waterAmount,
+            mpmGridSize = mpmGridSize,
+            mpmWaterR = mpmWaterR, mpmWaterG = mpmWaterG, mpmWaterB = mpmWaterB,
+            mpmWaterOpacity = mpmWaterOpacity, mpmParticleRadius = mpmParticleRadius,
+            mpmRenderStyle = mpmRenderStyle, mpmTouchStrength = mpmTouchStrength,
+            accelEnabled = accelEnabled, waterAmount = waterAmount,
+            particleCount = particleCount,
         )
-    }
-
-    fun applyDefaults() {
-        val d = WatercSettings()
-        waterR = d.waterR
-        waterG = d.waterG
-        waterB = d.waterB
-        absorption = d.absorption
-        specular = d.specular
-        volSteps = d.volSteps
-        gravityStrength = d.gravityStrength
-        damping = d.damping
-        tiltSensitivity = d.tiltSensitivity
-        renderScale = d.renderScale
-        targetFps = d.targetFps
-        gridSize = d.gridSize
-        accelEnabled = d.accelEnabled
-        waterAmount = d.waterAmount
     }
 
     Column(
@@ -145,151 +140,265 @@ private fun SettingsScreen(
     ) {
         Text(stringResource(R.string.settings_screen_title), fontSize = 22.sp)
 
-        Section(stringResource(R.string.section_water_color)) {
-            Text("R: ${(waterR * 255).toInt()}")
-            Slider(
-                value = waterR * 255f,
-                onValueChange = { waterR = (it / 255f).coerceIn(0f, 1f) },
-                valueRange = 0f..255f,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Text("G: ${(waterG * 255).toInt()}")
-            Slider(
-                value = waterG * 255f,
-                onValueChange = { waterG = (it / 255f).coerceIn(0f, 1f) },
-                valueRange = 0f..255f,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Text("B: ${(waterB * 255).toInt()}")
-            Slider(
-                value = waterB * 255f,
-                onValueChange = { waterB = (it / 255f).coerceIn(0f, 1f) },
-                valueRange = 0f..255f,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
+        // ══════════════════════════════════════════
 
-        Section(stringResource(R.string.section_absorption)) {
-            Text(String.format(Locale.US, "%.2f", absorption))
-            Slider(
-                value = absorption,
-                onValueChange = { absorption = it.coerceIn(0f, 10f) },
-                valueRange = 0f..10f,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-
-        Section(stringResource(R.string.section_specular)) {
-            Text(String.format(Locale.US, "%.2f", specular))
-            Slider(
-                value = specular,
-                onValueChange = { specular = it.coerceIn(0f, 3f) },
-                valueRange = 0f..3f,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-
-        Section(stringResource(R.string.section_raymarch)) {
-            Text("$volSteps")
-            Slider(
-                value = volSteps.toFloat(),
-                onValueChange = { volSteps = it.toInt().coerceIn(8, 128) },
-                valueRange = 8f..128f,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-
-        Section(stringResource(R.string.section_gravity)) {
-            Text(String.format(Locale.US, "%.2f", gravityStrength))
-            Slider(
-                value = gravityStrength,
-                onValueChange = { gravityStrength = it.coerceIn(0f, 8f) },
-                valueRange = 0f..8f,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-
-        Section(stringResource(R.string.section_water_amount)) {
-            Text(String.format(Locale.US, "%.2f×", waterAmount))
-            Slider(
-                value = waterAmount,
-                onValueChange = { waterAmount = it.coerceIn(0.1f, 2.0f) },
-                valueRange = 0.1f..2.0f,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Text(stringResource(R.string.hint_water_amount), fontSize = 11.sp)
-        }
-
-        Section(stringResource(R.string.section_damping)) {
-            Text(String.format(Locale.US, "%.4f", damping))
-            Slider(
-                value = damping,
-                onValueChange = { damping = it.coerceIn(0.9f, 1f) },
-                valueRange = 0.9f..1f,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-
-        Section(stringResource(R.string.section_tilt)) {
-            Text(String.format(Locale.US, "%.2f", tiltSensitivity))
-            Slider(
-                value = tiltSensitivity,
-                onValueChange = { tiltSensitivity = it.coerceIn(0f, 3f) },
-                valueRange = 0f..3f,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-
-        Section(stringResource(R.string.section_render_scale)) {
-            Text(String.format(Locale.US, "%.2f", renderScale))
-            Slider(
-                value = renderScale,
-                onValueChange = { renderScale = it.coerceIn(0.25f, 1f) },
-                valueRange = 0.25f..1f,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-
-        Section(stringResource(R.string.section_target_fps)) {
-            Text("$targetFps")
-            Slider(
-                value = targetFps.toFloat(),
-                onValueChange = { targetFps = it.toInt().coerceIn(15, 120) },
-                valueRange = 15f..120f,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-
-        Section(stringResource(R.string.section_grid_size)) {
-            Text("Grid size: $gridSize")
-            Slider(
-                value = gridSize.toFloat(),
-                onValueChange = { gridSize = it.toInt().coerceIn(16, 128) },
-                valueRange = 16f..128f,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Text(stringResource(R.string.hint_grid_size), fontSize = 11.sp)
-        }
-
-        Section(stringResource(R.string.section_accelerometer)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Switch(checked = accelEnabled, onCheckedChange = { accelEnabled = it })
-                Text(
-                    stringResource(R.string.hint_accel_toggle),
-                    fontSize = 13.sp,
-                    modifier = Modifier.padding(start = 12.dp)
+        Section("Режим симуляции") {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FilterChip(
+                    selected = simMode == 0,
+                    onClick = { simMode = 0 },
+                    label = { Text("Euler (GPU)", fontSize = 12.sp) },
+                    modifier = Modifier.weight(1f)
+                )
+                FilterChip(
+                    selected = simMode == 1,
+                    onClick = { simMode = 1 },
+                    label = { Text("MLS-MPM", fontSize = 12.sp) },
+                    modifier = Modifier.weight(1f)
                 )
             }
         }
 
-        Button(onClick = { onSave(currentSettings()) }, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.settings_save_button))
+        if (simMode == 0) {
+            Text("— Настройки Euler —",
+                fontSize = 13.sp,
+                color = MaterialTheme.colorScheme.primary)
+
+            Section(stringResource(R.string.section_water_color)) {
+                Text("R: ${(waterR * 255).toInt()}")
+                Slider(value = waterR * 255f,
+                    onValueChange = { waterR = (it / 255f).coerceIn(0f, 1f) },
+                    valueRange = 0f..255f, modifier = Modifier.fillMaxWidth())
+                Text("G: ${(waterG * 255).toInt()}")
+                Slider(value = waterG * 255f,
+                    onValueChange = { waterG = (it / 255f).coerceIn(0f, 1f) },
+                    valueRange = 0f..255f, modifier = Modifier.fillMaxWidth())
+                Text("B: ${(waterB * 255).toInt()}")
+                Slider(value = waterB * 255f,
+                    onValueChange = { waterB = (it / 255f).coerceIn(0f, 1f) },
+                    valueRange = 0f..255f, modifier = Modifier.fillMaxWidth())
+            }
+
+            Section("Разрешение сетки (Euler)") {
+                Text("Grid size: $gridSize")
+
+                Slider(
+                    value = gridSize.toFloat(),
+                    onValueChange = { gridSize = it.toInt().coerceIn(16, 64) },
+                    valueRange = 16f..64f,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Text(
+                    stringResource(R.string.hint_grid_size),
+                    fontSize = 11.sp
+                )
+            }
+
+            Section(stringResource(R.string.section_absorption)) {
+                Text(String.format(Locale.US, "%.2f", absorption))
+                Slider(value = absorption,
+                    onValueChange = { absorption = it.coerceIn(0f, 10f) },
+                    valueRange = 0f..10f, modifier = Modifier.fillMaxWidth())
+            }
+            Section(stringResource(R.string.section_specular)) {
+                Text(String.format(Locale.US, "%.2f", specular))
+                Slider(value = specular,
+                    onValueChange = { specular = it.coerceIn(0f, 3f) },
+                    valueRange = 0f..3f, modifier = Modifier.fillMaxWidth())
+            }
+            Section(stringResource(R.string.section_raymarch)) {
+                Text("$volSteps")
+                Slider(value = volSteps.toFloat(),
+                    onValueChange = { volSteps = it.toInt().coerceIn(8, 128) },
+                    valueRange = 8f..128f, modifier = Modifier.fillMaxWidth())
+            }
+            Section(stringResource(R.string.section_damping)) {
+                Text(String.format(Locale.US, "%.4f", damping))
+                Slider(value = damping,
+                    onValueChange = { damping = it.coerceIn(0.9f, 1f) },
+                    valueRange = 0.9f..1f, modifier = Modifier.fillMaxWidth())
+            }
         }
 
+
+        if (simMode == 1) {
+            Text("— Настройки MLS-MPM —",
+                fontSize = 13.sp,
+                color = MaterialTheme.colorScheme.primary)
+
+            Section("Разрешение сетки MLS-MPM") {
+                Text("MPM grid size: $mpmGridSize")
+
+                Slider(
+                    value = mpmGridSize.toFloat(),
+                    onValueChange = { mpmGridSize = it.toInt().coerceIn(32, 80) },
+                    valueRange = 32f..80f,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Text(
+                    "Влияет только на MLS-MPM. Не связано с Euler Grid size.",
+                    fontSize = 11.sp
+                )
+            }
+
+            Section("Сценарий") {
+                Row(modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(0 to "Dam Break", 1 to "Water Drop", 2 to "Dual Wave")
+                        .forEach { (sc, label) ->
+                            FilterChip(
+                                selected = scenario == sc,
+                                onClick = { scenario = sc },
+                                label = { Text(label, fontSize = 11.sp) },
+                                modifier = Modifier.weight(1f))
+                        }
+                }
+            }
+            Section("Скорость симуляции") {
+                Text(String.format(Locale.US, "%.2f", simSpeed))
+                Slider(value = simSpeed,
+                    onValueChange = { simSpeed = it.coerceIn(0.3f, 1.0f) },
+                    valueRange = 0.3f..1.0f, modifier = Modifier.fillMaxWidth())
+            }
+            Section("Цвет воды") {
+                Text("R: ${(mpmWaterR * 255).toInt()}")
+                Slider(value = mpmWaterR * 255f,
+                    onValueChange = { mpmWaterR = (it / 255f).coerceIn(0f, 1f) },
+                    valueRange = 0f..255f, modifier = Modifier.fillMaxWidth())
+                Text("G: ${(mpmWaterG * 255).toInt()}")
+                Slider(value = mpmWaterG * 255f,
+                    onValueChange = { mpmWaterG = (it / 255f).coerceIn(0f, 1f) },
+                    valueRange = 0f..255f, modifier = Modifier.fillMaxWidth())
+                Text("B: ${(mpmWaterB * 255).toInt()}")
+                Slider(value = mpmWaterB * 255f,
+                    onValueChange = { mpmWaterB = (it / 255f).coerceIn(0f, 1f) },
+                    valueRange = 0f..255f, modifier = Modifier.fillMaxWidth())
+            }
+            Section("Прозрачность воды") {
+                Text(String.format(Locale.US, "%.2f", mpmWaterOpacity))
+                Slider(value = mpmWaterOpacity,
+                    onValueChange = { mpmWaterOpacity = it.coerceIn(0.1f, 1f) },
+                    valueRange = 0.1f..1f, modifier = Modifier.fillMaxWidth())
+            }
+            Section("Радиус частиц") {
+                Text(String.format(Locale.US, "%.2f", mpmParticleRadius))
+                Slider(value = mpmParticleRadius,
+                    onValueChange = { mpmParticleRadius = it.coerceIn(0.35f, 1.1f) },
+                    valueRange = 0.35f..1.1f, modifier = Modifier.fillMaxWidth())
+            }
+            Section("Стиль рендера") {
+                Row(modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf(0 to "Объём", 1 to "Сферы", 2 to "Кристалл", 3 to "Скорость")
+                        .forEach { (style, label) ->
+                            FilterChip(
+                                selected = mpmRenderStyle == style,
+                                onClick = { mpmRenderStyle = style },
+                                label = { Text(label, fontSize = 10.sp) },
+                                modifier = Modifier.weight(1f))
+                        }
+                }
+            }
+            Section("Сила тача") {
+                Text(String.format(Locale.US, "%.2f", mpmTouchStrength))
+                Slider(value = mpmTouchStrength,
+                    onValueChange = { mpmTouchStrength = it.coerceIn(0.2f, 3f) },
+                    valueRange = 0.2f..3f, modifier = Modifier.fillMaxWidth())
+            }
+        }
+
+        Text("— Общие настройки —",
+            fontSize = 13.sp,
+            color = MaterialTheme.colorScheme.primary)
+
+        Section(stringResource(R.string.section_water_amount)) {
+            Text(String.format(Locale.US, "%.2f×", waterAmount))
+            Slider(value = waterAmount,
+                onValueChange = { waterAmount = it.coerceIn(0.1f, 2.0f) },
+                valueRange = 0.1f..2.0f, modifier = Modifier.fillMaxWidth())
+            Text(stringResource(R.string.hint_water_amount), fontSize = 11.sp)
+        }
+        Section(stringResource(R.string.section_gravity)) {
+            Text(String.format(Locale.US, "%.2f", gravityStrength))
+            Slider(value = gravityStrength,
+                onValueChange = { gravityStrength = it.coerceIn(0f, 8f) },
+                valueRange = 0f..8f, modifier = Modifier.fillMaxWidth())
+        }
+        Section(stringResource(R.string.section_tilt)) {
+            Text(String.format(Locale.US, "%.2f", tiltSensitivity))
+            Slider(value = tiltSensitivity,
+                onValueChange = { tiltSensitivity = it.coerceIn(0f, 3f) },
+                valueRange = 0f..3f, modifier = Modifier.fillMaxWidth())
+        }
+        Section(stringResource(R.string.section_render_scale)) {
+            Text(String.format(Locale.US, "%.2f", renderScale))
+            Slider(value = renderScale,
+                onValueChange = { renderScale = it.coerceIn(0.25f, 1f) },
+                valueRange = 0.25f..1f, modifier = Modifier.fillMaxWidth())
+        }
+        Section(stringResource(R.string.section_target_fps)) {
+            Text("$targetFps")
+            Slider(value = targetFps.toFloat(),
+                onValueChange = { targetFps = it.toInt().coerceIn(15, 120) },
+                valueRange = 15f..120f, modifier = Modifier.fillMaxWidth())
+        }
+        Section(stringResource(R.string.section_grid_size)) {
+            Text("Grid size: $gridSize")
+            Slider(value = gridSize.toFloat(),
+                onValueChange = { gridSize = it.toInt().coerceIn(16, 128) },
+                valueRange = 16f..128f, modifier = Modifier.fillMaxWidth())
+            Text(stringResource(R.string.hint_grid_size), fontSize = 11.sp)
+        }
+        Section(stringResource(R.string.section_accelerometer)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Switch(checked = accelEnabled, onCheckedChange = { accelEnabled = it })
+                Text(stringResource(R.string.hint_accel_toggle),
+                    fontSize = 13.sp, modifier = Modifier.padding(start = 12.dp))
+            }
+        }
+
+        // Кнопки
+        Button(onClick = { onSave(currentSettings()) },
+            modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.settings_save_button))
+        }
         OutlinedButton(
             onClick = {
                 WatercSettings.reset(context, synchronous = true)
-                applyDefaults()
+
+                val d = WatercSettings()
+
+                waterR = d.waterR
+                waterG = d.waterG
+                waterB = d.waterB
+                absorption = d.absorption
+                specular = d.specular
+                volSteps = d.volSteps
+                gravityStrength = d.gravityStrength
+                damping = d.damping
+                simSpeed = d.simSpeed
+                tiltSensitivity = d.tiltSensitivity
+                renderScale = d.renderScale
+                targetFps = d.targetFps
+                gridSize = d.gridSize
+                mpmGridSize = d.mpmGridSize
+                particleCount = d.particleCount
+                mpmWaterR = d.mpmWaterR
+                mpmWaterG = d.mpmWaterG
+                mpmWaterB = d.mpmWaterB
+                mpmWaterOpacity = d.mpmWaterOpacity
+                mpmParticleRadius = d.mpmParticleRadius
+                mpmRenderStyle = d.mpmRenderStyle
+                mpmTouchStrength = d.mpmTouchStrength
+                accelEnabled = d.accelEnabled
+                waterAmount = d.waterAmount
+                simMode = d.simMode
+                scenario = d.scenario
             },
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -298,32 +407,24 @@ private fun SettingsScreen(
 
 
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
                 .clickable {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/AlexanderHarebava"))
+                    val intent = Intent(Intent.ACTION_VIEW,
+                        Uri.parse("https://github.com/AlexanderHarebava"))
                     context.startActivity(intent)
                 }
                 .padding(top = 8.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = Icons.Default.Link,
-                contentDescription = "GitHub",
+            Icon(imageVector = Icons.Default.Link, contentDescription = "GitHub",
                 modifier = Modifier.size(18.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                text = stringResource(R.string.author_credit),
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.primary,
+                tint = MaterialTheme.colorScheme.primary)
+            Text(text = stringResource(R.string.author_credit),
+                fontSize = 14.sp, color = MaterialTheme.colorScheme.primary,
                 textDecoration = TextDecoration.Underline,
-                modifier = Modifier.padding(start = 8.dp)
-            )
+                modifier = Modifier.padding(start = 8.dp))
         }
-
-
         ExpandableLicenseSection()
     }
 }

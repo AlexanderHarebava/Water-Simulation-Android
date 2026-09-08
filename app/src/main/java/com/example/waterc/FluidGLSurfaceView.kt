@@ -7,6 +7,7 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.opengl.GLSurfaceView
 import android.view.MotionEvent
+import com.example.waterc.WatercSettings.Companion.effectiveGridSize
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
@@ -42,57 +43,131 @@ class FluidGLSurfaceView(
     init {
         setEGLContextClientVersion(3)
         setEGLConfigChooser(8, 8, 8, 8, 16, 0)
-
         setRenderer(object : Renderer {
             override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
-                simulation.init(settings.gridSize)
-            }
+                simulation.init(settings.effectiveGridSize(), settings.simMode)
 
+                if (settings.simMode == FluidSimulation.MODE_MPM) {
+                    simulation.setParticleCount(settings.particleCount)
+                }
+            }
             override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
                 surfaceW = width
                 surfaceH = height
-
                 simulation.resize(width, height)
-
-
                 simulation.applyVisualSettings(settings)
+                // Применяем particleCount для MPM после первого resize
+                if (settings.simMode == FluidSimulation.MODE_MPM) {
+                    simulation.setParticleCount(settings.particleCount)
+                }
             }
-
             override fun onDrawFrame(gl: GL10?) {
                 fpsMeter?.onFrame(System.nanoTime())
                 simulation.step()
                 simulation.render()
             }
         })
-
         renderMode = RENDERMODE_CONTINUOUSLY
-
         startSensors()
     }
-
     fun applySettings(newSettings: WatercSettings) {
         val old = settings
         settings = newSettings
 
-        if (newSettings.gridSize != old.gridSize) {
-            setGridSize(newSettings.gridSize)
-        } else if (surfaceW > 0 && surfaceH > 0) {
+        if (surfaceW <= 0 || surfaceH <= 0) return
+
+        val needRecreate =
+            newSettings.simMode != old.simMode ||
+                    newSettings.effectiveGridSize() != old.effectiveGridSize()
+
+        if (needRecreate) {
             queueEvent {
+                simulation.destroy()
+                simulation.init(newSettings.effectiveGridSize(), newSettings.simMode)
+
+                if (newSettings.simMode == FluidSimulation.MODE_MPM) {
+                    simulation.setParticleCount(newSettings.particleCount)
+                }
+
+                simulation.resize(surfaceW, surfaceH)
+                simulation.applyVisualSettings(newSettings)
+            }
+        } else {
+            queueEvent {
+                if (
+                    newSettings.simMode == FluidSimulation.MODE_MPM &&
+                    newSettings.particleCount != old.particleCount
+                ) {
+                    simulation.setParticleCount(newSettings.particleCount)
+                }
+
                 simulation.applyVisualSettings(newSettings)
             }
         }
     }
 
-    fun setGridSize(size: Int) {
-        settings = settings.copy(gridSize = size)
 
-        if (surfaceW > 0 && surfaceH > 0) {
-            queueEvent {
-                simulation.init(size)
-                simulation.resize(surfaceW, surfaceH)
-                simulation.applyVisualSettings(settings)
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        if (width <= 0 || height <= 0) return true   // FIX: защита от деления на 0
+        when (event.action) {
+            MotionEvent.ACTION_DOWN -> {
+                lastTouchX = event.x
+                lastTouchY = event.y
+            }
+            MotionEvent.ACTION_MOVE -> {
+                val dx = event.x - lastTouchX
+                val dy = event.y - lastTouchY
+
+                if (settings.simMode == FluidSimulation.MODE_MPM) {
+                    // === Тач-взаимодействие в стиле Splash ===
+                    val g = settings.gridSize.toFloat()
+                    val nx = event.x / width      // 0..1
+                    val ny = event.y / height     // 0..1
+
+                    // Маппинг экрана → сетка с учётом перспективы.
+                    // Камера смотрит из (yaw, pitch) на центр куба.
+                    // Используем грубую, но рабочую проекцию:
+                    //   X экрана → X/Z сетки (зависит от yaw)
+                    //   Y экрана → Y сетки
+                    val cx = nx * g
+                    val cy = (1.0f - ny) * g * 0.75f  // инвертируем, т.к. экран сверху вниз
+                    val cz = ny * g
+
+                    // Сила пропорциональна скорости пальца (как в Splash: mouseVel)
+                    // Масштабируем на размер сетки и усиливаем
+                    val speedMult = settings.mpmTouchStrength * 1.8f
+                    val fx = (dx / width)  * g * speedMult
+                    val fy = 0f
+                    val fz = (dy / height) * g * speedMult
+
+                    // Радиус как в Splash: mouseRadius ≈ 14–18 ячеек
+                    val radius = 16.0f
+                    simulation.setPointer(cx, cy, cz, fx, fy, fz, radius)
+                } else {
+                    // Euler: палец вращает камеру
+                    simulation.touch(
+                        event.x / width,
+                        event.y / height,
+                        dx / width,
+                        dy / height
+                    )
+                }
+                lastTouchX = event.x
+                lastTouchY = event.y
+            }
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                if (settings.simMode == FluidSimulation.MODE_MPM) {
+                    simulation.releasePointer()
+                }
             }
         }
+        return true
+    }
+
+
+    fun setGridSize(size: Int) {
+        val newSettings = settings.copy(gridSize = size)
+        applySettings(newSettings)
     }
 
     fun startSensors() {
@@ -140,10 +215,13 @@ class FluidGLSurfaceView(
 
                 simulation.setGravity(lowPassX, lowPassY, lowPassZ)
             }
+
             Sensor.TYPE_GYROSCOPE -> {
+                // В режиме MLS-MPM гироскоп выключен
+                if (settings.simMode == FluidSimulation.MODE_MPM) return
+
                 val rx = event.values[0]
                 val ry = event.values[1]
-
                 val now = event.timestamp
 
                 if (lastGyroTimeNs != 0L) {
@@ -154,10 +232,8 @@ class FluidGLSurfaceView(
 
                         if (mag > gyroDeadZone) {
                             val sensitivity = settings.tiltSensitivity
-
                             val yawDelta = -ry * dt * sensitivity
                             val pitchDelta = -rx * dt * sensitivity
-
                             simulation.rotateCamera(yawDelta, pitchDelta)
                         }
                     }
@@ -170,33 +246,8 @@ class FluidGLSurfaceView(
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 
-    override fun onTouchEvent(event: MotionEvent): Boolean {
-        when (event.action) {
-            MotionEvent.ACTION_DOWN -> {
-                lastTouchX = event.x
-                lastTouchY = event.y
-            }
-
-            MotionEvent.ACTION_MOVE -> {
-                val dx = event.x - lastTouchX
-                val dy = event.y - lastTouchY
-
-                simulation.touch(
-                    event.x / width,
-                    event.y / height,
-                    dx / width,
-                    dy / height
-                )
-
-                lastTouchX = event.x
-                lastTouchY = event.y
-            }
-        }
-        return true
-    }
-
     fun cleanup() {
         stopSensors()
-        simulation.destroy()
+        queueEvent { simulation.destroy() }   // FIX: уничтожать в GL-потоке
     }
 }

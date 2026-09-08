@@ -8,6 +8,7 @@ import android.hardware.SensorManager
 import android.service.wallpaper.WallpaperService
 import android.util.Log
 import android.view.SurfaceHolder
+import com.example.waterc.WatercSettings.Companion.effectiveGridSize
 
 class FluidWallpaperService : WallpaperService() {
 
@@ -60,33 +61,24 @@ class FluidWallpaperService : WallpaperService() {
         override fun onSurfaceCreated(holder: SurfaceHolder?) {
             super.onSurfaceCreated(holder)
             Log.i(TAG, "onSurfaceCreated")
-
+            val h = holder ?: return
             val saved = WatercSettings.load(this@FluidWallpaperService)
-
             val existing = eglThread
-
             if (existing != null && existing.isStarted()) {
-                if (saved.gridSize != settings.gridSize) {
-                    Log.i(
-                        TAG,
-                        "GridSize changed ${settings.gridSize} -> ${saved.gridSize}, recreating"
-                    )
-
+                if (saved.effectiveGridSize() != settings.effectiveGridSize()) {
+                    Log.i(TAG, "GridSize changed, recreating")
                     destroyThreadAndSim()
-
                     settings = saved
-                    createThread(holder!!, settings)
+                    createThread(h, settings)
                 } else {
                     settings = saved
                     existing.settings = saved
                     existing.resume()
                 }
-
                 return
             }
-
             settings = saved
-            createThread(holder!!, settings)
+            createThread(h, settings)
         }
 
         private fun createThread(holder: SurfaceHolder, settings: WatercSettings) {
@@ -149,7 +141,7 @@ class FluidWallpaperService : WallpaperService() {
         private fun checkSettingsAndRecreateIfNeeded() {
             val newSettings = WatercSettings.load(this@FluidWallpaperService)
 
-            if (newSettings.gridSize != settings.gridSize) {
+            if (newSettings.effectiveGridSize() != settings.effectiveGridSize()) {
                 Log.i(
                     TAG,
                     "Visibility triggered gridSize change: " +

@@ -250,7 +250,7 @@ void main() {
         float r2 = uPointerRadius * uPointerRadius;
         if (d2 < r2) {
             float falloff = smoothstep(r2, 0.0, d2);
-            vel += uPointerForce * (falloff * uPointerStrength * 0.2);
+            vel += uPointerForce * (falloff * uPointerStrength * 1.0);
         }
     }
 

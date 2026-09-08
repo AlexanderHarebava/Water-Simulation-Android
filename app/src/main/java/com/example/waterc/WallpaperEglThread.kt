@@ -13,6 +13,7 @@ class WallpaperEglThread(
     private val holder: SurfaceHolder,
     private val simulation: FluidSimulation,
     @Volatile var settings: WatercSettings,
+    private val touchForceCallback: (() -> Unit)? = null,
 ) {
     companion object {
         private const val TAG = "WallpaperEGL"
@@ -25,9 +26,7 @@ class WallpaperEglThread(
     @Volatile private var width: Int = 0
     @Volatile private var height: Int = 0
     @Volatile private var surfaceDirty = false
-
     private var thread: Thread? = null
-
     private var appliedSettings: WatercSettings? = null
 
     fun setSize(w: Int, h: Int) {
@@ -37,11 +36,9 @@ class WallpaperEglThread(
 
     fun start() {
         if (running) return
-
         running = true
         paused = false
         surfaceDirty = false
-
         thread = Thread({ runLoop() }, "WallpaperEglThread").apply {
             isDaemon = true
             start()
@@ -52,12 +49,10 @@ class WallpaperEglThread(
         running = false
         paused = false
         thread?.interrupt()
-
         try {
             thread?.join(2000)
         } catch (_: InterruptedException) {
         }
-
         thread = null
     }
 
@@ -81,7 +76,6 @@ class WallpaperEglThread(
             Log.e(TAG, "eglGetDisplay failed")
             return
         }
-
         val version = IntArray(2)
         if (!EGL14.eglInitialize(display, version, 0, version, 1)) {
             Log.e(TAG, "eglInitialize failed")
@@ -98,10 +92,8 @@ class WallpaperEglThread(
             EGL_RECORDABLE_ANDROID, 1,
             EGL14.EGL_NONE
         )
-
         val configs = arrayOfNulls<EGLConfig>(1)
         val numConfigs = IntArray(1)
-
         if (!EGL14.eglChooseConfig(
                 display, configAttribs, 0, configs, 0, 1, numConfigs, 0
             ) || numConfigs[0] == 0
@@ -115,7 +107,6 @@ class WallpaperEglThread(
                 EGL14.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
                 EGL14.EGL_NONE
             )
-
             if (!EGL14.eglChooseConfig(
                     display, fallback, 0, configs, 0, 1, numConfigs, 0
                 ) || numConfigs[0] == 0
@@ -127,20 +118,13 @@ class WallpaperEglThread(
         }
 
         val eglConfig = configs[0]!!
-
         val contextAttribs = intArrayOf(
             EGL14.EGL_CONTEXT_CLIENT_VERSION, 3,
             EGL14.EGL_NONE
         )
-
         val context: EGLContext = EGL14.eglCreateContext(
-            display,
-            eglConfig,
-            EGL14.EGL_NO_CONTEXT,
-            contextAttribs,
-            0
+            display, eglConfig, EGL14.EGL_NO_CONTEXT, contextAttribs, 0
         )
-
         if (context == EGL14.EGL_NO_CONTEXT) {
             Log.e(TAG, "eglCreateContext failed")
             EGL14.eglTerminate(display)
@@ -155,9 +139,7 @@ class WallpaperEglThread(
         try {
             while (running) {
                 if (paused) {
-                    try {
-                        Thread.sleep(50)
-                    } catch (_: InterruptedException) {
+                    try { Thread.sleep(50) } catch (_: InterruptedException) {
                         if (!running) break
                     }
                     continue
@@ -165,147 +147,75 @@ class WallpaperEglThread(
 
                 val wantW = width
                 val wantH = height
-
                 if (wantW <= 0 || wantH <= 0) {
-                    try {
-                        Thread.sleep(50)
-                    } catch (_: InterruptedException) {
-                    }
+                    try { Thread.sleep(50) } catch (_: InterruptedException) { }
                     continue
                 }
 
                 val needRecreate = eglSurface == EGL14.EGL_NO_SURFACE ||
-                        curWidth != wantW ||
-                        curHeight != wantH ||
-                        surfaceDirty
+                        curWidth != wantW || curHeight != wantH || surfaceDirty
 
                 if (needRecreate) {
                     surfaceDirty = false
-
-                    EGL14.eglMakeCurrent(
-                        display,
-                        EGL14.EGL_NO_SURFACE,
-                        EGL14.EGL_NO_SURFACE,
-                        EGL14.EGL_NO_CONTEXT
-                    )
-
+                    EGL14.eglMakeCurrent(display, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_CONTEXT)
                     if (eglSurface != EGL14.EGL_NO_SURFACE) {
                         EGL14.eglDestroySurface(display, eglSurface)
                         eglSurface = EGL14.EGL_NO_SURFACE
                     }
-
                     val surfaceAttribs = intArrayOf(EGL14.EGL_NONE)
-
-                    eglSurface = EGL14.eglCreateWindowSurface(
-                        display,
-                        eglConfig,
-                        holder,
-                        surfaceAttribs,
-                        0
-                    )
-
+                    eglSurface = EGL14.eglCreateWindowSurface(display, eglConfig, holder, surfaceAttribs, 0)
                     if (eglSurface == EGL14.EGL_NO_SURFACE) {
-                        Log.e(
-                            TAG,
-                            "eglCreateWindowSurface failed: 0x" +
-                                    Integer.toHexString(EGL14.eglGetError())
-                        )
-
-                        try {
-                            Thread.sleep(100)
-                        } catch (_: InterruptedException) {
-                        }
-
+                        Log.e(TAG, "eglCreateWindowSurface failed: 0x" + Integer.toHexString(EGL14.eglGetError()))
+                        try { Thread.sleep(100) } catch (_: InterruptedException) { }
                         continue
                     }
-
-                    if (!EGL14.eglMakeCurrent(
-                            display,
-                            eglSurface,
-                            eglSurface,
-                            context
-                        )
-                    ) {
-                        Log.e(
-                            TAG,
-                            "eglMakeCurrent failed: 0x" +
-                                    Integer.toHexString(EGL14.eglGetError())
-                        )
-
+                    if (!EGL14.eglMakeCurrent(display, eglSurface, eglSurface, context)) {
+                        Log.e(TAG, "eglMakeCurrent failed: 0x" + Integer.toHexString(EGL14.eglGetError()))
                         EGL14.eglDestroySurface(display, eglSurface)
                         eglSurface = EGL14.EGL_NO_SURFACE
-
-                        try {
-                            Thread.sleep(100)
-                        } catch (_: InterruptedException) {
-                        }
-
+                        try { Thread.sleep(100) } catch (_: InterruptedException) { }
                         continue
                     }
-
                     val qw = IntArray(1)
                     val qh = IntArray(1)
-
                     EGL14.eglQuerySurface(display, eglSurface, EGL14.EGL_WIDTH, qw, 0)
                     EGL14.eglQuerySurface(display, eglSurface, EGL14.EGL_HEIGHT, qh, 0)
-
                     val surfW = if (qw[0] > 0) qw[0] else wantW
                     val surfH = if (qh[0] > 0) qh[0] else wantH
-
                     curWidth = wantW
                     curHeight = wantH
 
                     if (!simInited) {
                         simulation.init(settings.effectiveGridSize(), settings.simMode)
-
                         if (settings.simMode == FluidSimulation.MODE_MPM) {
                             simulation.setParticleCount(settings.particleCount)
                         }
-
                         simInited = true
                     }
-
                     simulation.resize(surfW, surfH)
-
-                    Log.i(
-                        TAG,
-                        "EGL surface (re)created: ${surfW}x${surfH}"
-                    )
+                    Log.i(TAG, "EGL surface (re)created: ${surfW}x${surfH}")
                 }
-
 
                 if (eglSurface != EGL14.EGL_NO_SURFACE && simInited) {
                     val newSettings = settings
                     val oldSettings = appliedSettings
-
-                    val needRecreateSim =
-                        oldSettings != null &&
-                                (
-                                        oldSettings.simMode != newSettings.simMode ||
-                                                oldSettings.effectiveGridSize() != newSettings.effectiveGridSize()
-                                        )
+                    val needRecreateSim = oldSettings != null &&
+                            (oldSettings.simMode != newSettings.simMode ||
+                                    oldSettings.effectiveGridSize() != newSettings.effectiveGridSize())
 
                     if (needRecreateSim) {
-                        Log.i(
-                            TAG,
-                            "Sim recreate: mode ${oldSettings!!.simMode} -> ${newSettings.simMode}, " +
-                                    "grid ${oldSettings.effectiveGridSize()} -> ${newSettings.effectiveGridSize()}"
-                        )
-
+                        Log.i(TAG, "Sim recreate: mode ${oldSettings!!.simMode} -> ${newSettings.simMode}, " +
+                                "grid ${oldSettings.effectiveGridSize()} -> ${newSettings.effectiveGridSize()}")
                         simulation.destroy()
                         simulation.init(newSettings.effectiveGridSize(), newSettings.simMode)
-
                         if (newSettings.simMode == FluidSimulation.MODE_MPM) {
                             simulation.setParticleCount(newSettings.particleCount)
                         }
-
                         simulation.resize(curWidth, curHeight)
                         simulation.applyVisualSettings(newSettings)
-
                         appliedSettings = newSettings
                     } else if (oldSettings != newSettings) {
-                        if (
-                            newSettings.simMode == FluidSimulation.MODE_MPM &&
+                        if (newSettings.simMode == FluidSimulation.MODE_MPM &&
                             oldSettings != null &&
                             newSettings.particleCount != oldSettings.particleCount
                         ) {
@@ -316,32 +226,19 @@ class WallpaperEglThread(
                     }
 
 
-                    val frameStart = System.nanoTime()
+                    touchForceCallback?.invoke()
 
+                    val frameStart = System.nanoTime()
                     try {
                         simulation.step()
                         simulation.render()
-
                         if (!EGL14.eglSwapBuffers(display, eglSurface)) {
-                            Log.w(
-                                TAG,
-                                "eglSwapBuffers failed: 0x" +
-                                        Integer.toHexString(EGL14.eglGetError())
-                            )
-
-                            EGL14.eglMakeCurrent(
-                                display,
-                                EGL14.EGL_NO_SURFACE,
-                                EGL14.EGL_NO_SURFACE,
-                                EGL14.EGL_NO_CONTEXT
-                            )
-
+                            Log.w(TAG, "eglSwapBuffers failed: 0x" + Integer.toHexString(EGL14.eglGetError()))
+                            EGL14.eglMakeCurrent(display, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_CONTEXT)
                             EGL14.eglDestroySurface(display, eglSurface)
-
                             eglSurface = EGL14.EGL_NO_SURFACE
                             curWidth = 0
                             curHeight = 0
-
                             continue
                         }
                     } catch (t: Throwable) {
@@ -350,12 +247,9 @@ class WallpaperEglThread(
 
                     val frameEnd = System.nanoTime()
                     val elapsed = frameEnd - frameStart
-
                     val fps = settings.targetFps.coerceIn(15, 120).toLong()
                     val frameIntervalNs = 1_000_000_000L / fps
-
                     val sleepNs = frameIntervalNs - elapsed
-
                     if (sleepNs > 0) {
                         try {
                             Thread.sleep(sleepNs / 1_000_000L)
@@ -366,19 +260,10 @@ class WallpaperEglThread(
                 }
             }
         } finally {
-
-            try {
-                simulation.destroy()
-            } catch (t: Throwable) {
+            try { simulation.destroy() } catch (t: Throwable) {
                 Log.e(TAG, "simulation destroy failed", t)
             }
-
-            EGL14.eglMakeCurrent(
-                display,
-                EGL14.EGL_NO_SURFACE,
-                EGL14.EGL_NO_SURFACE,
-                EGL14.EGL_NO_CONTEXT
-            )
+            EGL14.eglMakeCurrent(display, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_CONTEXT)
             if (eglSurface != EGL14.EGL_NO_SURFACE) {
                 EGL14.eglDestroySurface(display, eglSurface)
             }

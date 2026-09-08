@@ -109,13 +109,13 @@ class FluidWallpaperService : WallpaperService() {
             val speed = kotlin.math.sqrt(touchDX * touchDX + touchDY * touchDY)
 
             if (speed > 0.5f) {
-                val strength = settings.mpmTouchStrength * 4.0f
+                val strength = settings.mpmTouchStrength * 3.5f
                 val fx = (touchDX / w) * g * strength
                 val fz = (touchDY / h) * g * strength
                 sim.setPointer(cx, cy, cz, fx, 0f, fz, radius)
             } else {
 
-                val holdStrength = settings.mpmTouchStrength * 2.5f
+                val holdStrength = settings.mpmTouchStrength * 3.5f
                 sim.setPointer(cx, cy, cz, 0f, -holdStrength * 0.3f, 0f, radius)
             }
 

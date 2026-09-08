@@ -153,12 +153,13 @@ vec3 rayDirection(vec2 uv, vec3 ro, vec3 target, float fovDeg) {
 
 float sampleDensity(vec3 p) {
     vec3 uv = (p + CUBE) / (2.0 * CUBE);
+    uv = clamp(uv, 0.0, 1.0);
     float raw = texture(uTex, uv).r;
     return smoothstep(0.25, 0.60, raw);
 }
-
 float sampleRawDensity(vec3 p) {
     vec3 uv = (p + CUBE) / (2.0 * CUBE);
+    uv = clamp(uv, 0.0, 1.0);
     return texture(uTex, uv).r;
 }
 
@@ -452,27 +453,22 @@ precision highp float;
 layout(location = 0) in vec2 aCorner;
 layout(location = 1) in vec3 aPos;
 layout(location = 2) in vec3 aVel;
-
 uniform mat4 uViewMatrix;
 uniform mat4 uProjMatrix;
 uniform float uGridN;
 uniform float uWorldRadius;
-
 out vec2 vUV;
 out vec3 vViewPos;
 out vec3 vVelocity;
-
 void main() {
     vUV = aCorner;
     vec3 rawPos = aPos;
     vec3 rawVel = aVel;
 
-    vec3 pPos = (rawPos / max(uGridN, 1.0) - 0.5) * 2.0;
+    vec3 pPos = ((rawPos + 0.5) / max(uGridN, 1.0) - 0.5) * 2.0;
     vVelocity = rawVel;
-
     vec4 viewCenter = uViewMatrix * vec4(pPos, 1.0);
     vViewPos = viewCenter.xyz;
-
     vec4 pos = viewCenter + vec4(aCorner * uWorldRadius, 0.0, 0.0);
     gl_Position = uProjMatrix * pos;
 }

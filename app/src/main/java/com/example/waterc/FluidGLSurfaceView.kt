@@ -103,14 +103,14 @@ class FluidGLSurfaceView(
 
         if (speed > 0.5f) {
 
-            val strength = settings.mpmTouchStrength * 4.0f
+            val strength = settings.mpmTouchStrength * 3.5f
             val fx = (dx / w) * g * strength
             val fy = 0f
             val fz = (dy / h) * g * strength
             simulation.setPointer(cx, cy, cz, fx, fy, fz, radius)
         } else {
 
-            val holdStrength = settings.mpmTouchStrength * 2.5f
+            val holdStrength = settings.mpmTouchStrength * 3.5f
 
             val fx = 0f
             val fy = -holdStrength * 0.3f

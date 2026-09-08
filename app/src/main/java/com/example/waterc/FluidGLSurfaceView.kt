@@ -109,6 +109,7 @@ class FluidGLSurfaceView(
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (width <= 0 || height <= 0) return true
+
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 lastTouchX = event.x
@@ -119,32 +120,23 @@ class FluidGLSurfaceView(
                 val dy = event.y - lastTouchY
 
                 if (settings.simMode == FluidSimulation.MODE_MPM) {
-
                     val g = settings.gridSize.toFloat()
                     val nx = event.x / width
                     val ny = event.y / height
-
-
-
-
-
 
                     val cx = nx * g
                     val cy = (1.0f - ny) * g * 0.75f
                     val cz = ny * g
 
-
-
                     val speedMult = settings.mpmTouchStrength * 1.8f
-                    val fx = (dx / width)  * g * speedMult
-                    val fy = 0f
-                    val fz = (dy / height) * g * speedMult
 
+                    val fx = (dx / width) * g * speedMult
+                    val fy = -(dy / height) * g * speedMult
+                    val fz = 0f
 
                     val radius = 16.0f
                     simulation.setPointer(cx, cy, cz, fx, fy, fz, radius)
                 } else {
-
                     simulation.touch(
                         event.x / width,
                         event.y / height,
@@ -152,6 +144,7 @@ class FluidGLSurfaceView(
                         dy / height
                     )
                 }
+
                 lastTouchX = event.x
                 lastTouchY = event.y
             }

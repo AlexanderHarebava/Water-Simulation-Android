@@ -1,12 +1,10 @@
 <resources>
-
-
-
     <string name="wallpaper_label">Симуляция воды на C++</string>
     <string name="wallpaper_description">Интерактивная 3D-симуляция жидкости: обои заполняют весь экран, гравитация реагирует на наклон устройства. Камера статична.</string>
     <string name="wallpaper_settings_title">Настройки обоев waterc</string>
-
     <string name="author_credit">Автор Alexander Harebava</string>
+
+    <!-- Menu -->
     <string name="menu_title">Симуляция воды на C++. На Андроид</string>
     <string name="menu_grid_desc">Детализация жидкости. Выше значение - красивее, но больше нагрузка на GPU. Лучше использовать 32</string>
     <string name="menu_apply_button">Применить живые обои</string>
@@ -14,12 +12,13 @@
     <string name="menu_close">Закрыть меню</string>
     <string name="menu_open">Открыть меню</string>
 
-
+    <!-- Settings Screen -->
     <string name="settings_screen_title">Настройки симуляции</string>
     <string name="settings_save_button">Сохранить и закрыть</string>
     <string name="settings_reset_button">Сбросить на стандартные</string>
 
-
+    <!-- Sections & Labels -->
+    <string name="section_sim_mode">Режим симуляции</string>
     <string name="section_water_color">Цвет воды</string>
     <string name="section_absorption">Мутность и поглощение света</string>
     <string name="section_specular">Интенсивность бликов</string>
@@ -32,12 +31,49 @@
     <string name="section_target_fps">Целевая частота кадров</string>
     <string name="section_grid_size">Разрешение симуляции</string>
     <string name="section_accelerometer">Управление наклоном</string>
+    <string name="section_mpm_water_style">Стиль воды (MLS-MPM)</string>
+    <string name="section_particle_count">Количество частиц (MLS-MPM)</string>
+    <string name="section_mpm_grid_size">Разрешение сетки MLS-MPM</string>
+    <string name="section_scenario">Сценарий</string>
+    <string name="section_sim_speed">Скорость симуляции</string>
+    <string name="section_mpm_opacity">Прозрачность воды</string>
+    <string name="section_mpm_radius">Радиус частиц</string>
+    <string name="section_mpm_render_style">Стиль рендера</string>
+    <string name="section_mpm_touch_strength">Сила тача</string>
+    <string name="section_common_settings">Общие настройки</string>
+    <string name="section_euler_settings">Настройки Euler</string>
+    <string name="section_mpm_settings">Настройки MLS-MPM</string>
 
-
+    <!-- Hints & Values -->
     <string name="hint_water_amount">Объём воды в начальной сфере. 1.00 - норма.</string>
     <string name="hint_grid_size">Выше значение - детальнее жидкость, но тяжелее для устройства.</string>
     <string name="hint_accel_toggle">Наклон устройства управляет течением</string>
+    <string name="hint_mpm_grid_size">Влияет только на MLS-MPM. Не связано с Euler Grid size.</string>
+    <string name="label_color_r">R: %d</string>
+    <string name="label_color_g">G: %d</string>
+    <string name="label_color_b">B: %d</string>
+    <string name="label_grid_size_value">Grid size: %d</string>
+    <string name="label_mpm_grid_size_value">MPM grid size: %d</string>
+    <string name="label_format_float_2">%.2f</string>
+    <string name="label_format_float_4">%.4f</string>
+    <string name="label_format_multiplier">%.2f×</string>
+    <string name="label_fps_value">%d</string>
 
+    <!-- Chips / Options -->
+    <string name="mode_euler_gpu">Euler (GPU)</string>
+    <string name="mode_mls_mpm">MLS-MPM</string>
+    <string name="style_volume">Объём</string>
+    <string name="style_spheres">Сферы</string>
+    <string name="style_crystal">Кристалл</string>
+    <string name="style_velocity">Скорость</string>
+    <string name="scenario_dam_break">Dam Break</string>
+    <string name="scenario_water_drop">Water Drop</string>
+    <string name="scenario_dual_wave">Dual Wave</string>
+    <string name="particle_count_25k">25K</string>
+    <string name="particle_count_40k">40K</string>
+    <string name="particle_count_70k">70K</string>
+
+    <!-- Performance Overlay -->
     <string name="perf_label_frame">КАДР</string>
     <string name="perf_label_cpu">CPU</string>
     <string name="perf_label_gpu">GPU</string>
@@ -46,4 +82,9 @@
     <string name="perf_na">н/д</string>
     <string name="perf_charging">зарядка</string>
     <string name="perf_full">заряжена</string>
+
+    <!-- License -->
+    <string name="license_title">ЛИЦЕНЗИЯ</string>
+    <string name="license_credit_label">Авторство:</string>
+    <string name="license_app_title">Лицензия приложения</string>
 </resources>

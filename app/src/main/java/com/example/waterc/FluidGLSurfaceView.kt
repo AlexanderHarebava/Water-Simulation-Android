@@ -56,7 +56,7 @@ class FluidGLSurfaceView(
                 surfaceH = height
                 simulation.resize(width, height)
                 simulation.applyVisualSettings(settings)
-                // Применяем particleCount для MPM после первого resize
+
                 if (settings.simMode == FluidSimulation.MODE_MPM) {
                     simulation.setParticleCount(settings.particleCount)
                 }
@@ -108,7 +108,7 @@ class FluidGLSurfaceView(
 
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        if (width <= 0 || height <= 0) return true   // FIX: защита от деления на 0
+        if (width <= 0 || height <= 0) return true
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 lastTouchX = event.x
@@ -119,32 +119,32 @@ class FluidGLSurfaceView(
                 val dy = event.y - lastTouchY
 
                 if (settings.simMode == FluidSimulation.MODE_MPM) {
-                    // === Тач-взаимодействие в стиле Splash ===
-                    val g = settings.gridSize.toFloat()
-                    val nx = event.x / width      // 0..1
-                    val ny = event.y / height     // 0..1
 
-                    // Маппинг экрана → сетка с учётом перспективы.
-                    // Камера смотрит из (yaw, pitch) на центр куба.
-                    // Используем грубую, но рабочую проекцию:
-                    //   X экрана → X/Z сетки (зависит от yaw)
-                    //   Y экрана → Y сетки
+                    val g = settings.gridSize.toFloat()
+                    val nx = event.x / width
+                    val ny = event.y / height
+
+
+
+
+
+
                     val cx = nx * g
-                    val cy = (1.0f - ny) * g * 0.75f  // инвертируем, т.к. экран сверху вниз
+                    val cy = (1.0f - ny) * g * 0.75f
                     val cz = ny * g
 
-                    // Сила пропорциональна скорости пальца (как в Splash: mouseVel)
-                    // Масштабируем на размер сетки и усиливаем
+
+
                     val speedMult = settings.mpmTouchStrength * 1.8f
                     val fx = (dx / width)  * g * speedMult
                     val fy = 0f
                     val fz = (dy / height) * g * speedMult
 
-                    // Радиус как в Splash: mouseRadius ≈ 14–18 ячеек
+
                     val radius = 16.0f
                     simulation.setPointer(cx, cy, cz, fx, fy, fz, radius)
                 } else {
-                    // Euler: палец вращает камеру
+
                     simulation.touch(
                         event.x / width,
                         event.y / height,
@@ -217,7 +217,7 @@ class FluidGLSurfaceView(
             }
 
             Sensor.TYPE_GYROSCOPE -> {
-                // В режиме MLS-MPM гироскоп выключен
+
                 if (settings.simMode == FluidSimulation.MODE_MPM) return
 
                 val rx = event.values[0]
@@ -248,6 +248,6 @@ class FluidGLSurfaceView(
 
     fun cleanup() {
         stopSensors()
-        queueEvent { simulation.destroy() }   // FIX: уничтожать в GL-потоке
+        queueEvent { simulation.destroy() }
     }
 }

@@ -1,0 +1,74 @@
+#version 310 es
+layout(local_size_x = 64) in;
+
+struct Particle { vec3 position; vec3 v; mat3 C; };
+struct Cell { int vx; int vy; int vz; int mass; };
+
+layout(std430, binding = 0) buffer Particles { Particle particles[]; };
+layout(std430, binding = 1) readonly buffer Cells { Cell cells[]; };
+
+uniform int   uNumParticles;
+uniform vec3  uBoxSize;
+uniform vec3  uRealBoxSize;
+uniform float uDt;
+uniform float uFixedMInv;
+
+float decodeF(int x) { return float(x) * uFixedMInv; }
+
+int cellIndex(vec3 c) {
+    return int(c.x) * int(uBoxSize.y) * int(uBoxSize.z)
+         + int(c.y) * int(uBoxSize.z) + int(c.z);
+}
+
+void main() {
+    uint id = gl_GlobalInvocationID.x;
+    if (id >= uint(uNumParticles)) return;
+
+    Particle p = particles[id];
+    vec3 cellIndexF = floor(p.position);
+    vec3 cellDiff   = p.position - (cellIndexF + 0.5);
+
+    vec3 w[3];
+    w[0] = 0.5 * (0.5 - cellDiff) * (0.5 - cellDiff);
+    w[1] = 0.75 - cellDiff * cellDiff;
+    w[2] = 0.5 * (0.5 + cellDiff) * (0.5 + cellDiff);
+
+    vec3 newVel = vec3(0.0);
+    mat3 B = mat3(0.0);
+
+    for (int gx = 0; gx < 3; gx++)
+    for (int gy = 0; gy < 3; gy++)
+    for (int gz = 0; gz < 3; gz++) {
+        float weight = w[gx].x * w[gy].y * w[gz].z;
+        vec3 cellX = cellIndexF + vec3(float(gx), float(gy), float(gz)) - 1.0;
+        vec3 cellDist = (cellX + 0.5) - p.position;
+
+        Cell c = cells[cellIndex(cellX)];
+        vec3 cellVel = vec3(decodeF(c.vx), decodeF(c.vy), decodeF(c.vz));
+
+        vec3 weightedVel = cellVel * weight;
+        B += mat3(weightedVel * cellDist.x,
+                  weightedVel * cellDist.y,
+                  weightedVel * cellDist.z);
+        newVel += weightedVel;
+    }
+
+    p.v = newVel;
+    p.C = B * 4.0;
+    p.position += p.v * uDt;
+
+
+    p.position = clamp(p.position, vec3(1.0), uRealBoxSize - 2.0);
+    vec3 x_n = p.position + p.v * uDt * 2.0;
+    vec3 wallMin = vec3(3.0);
+    vec3 wallMax = uRealBoxSize - 4.0;
+    float wallStiffness = 1.0;
+    if (x_n.x < wallMin.x) p.v.x += wallStiffness * (wallMin.x - x_n.x);
+    if (x_n.x > wallMax.x) p.v.x += wallStiffness * (wallMax.x - x_n.x);
+    if (x_n.y < wallMin.y) p.v.y += wallStiffness * (wallMin.y - x_n.y);
+    if (x_n.y > wallMax.y) p.v.y += wallStiffness * (wallMax.y - x_n.y);
+    if (x_n.z < wallMin.z) p.v.z += wallStiffness * (wallMin.z - x_n.z);
+    if (x_n.z > wallMax.z) p.v.z += wallStiffness * (wallMax.z - x_n.z);
+
+    particles[id] = p;
+}

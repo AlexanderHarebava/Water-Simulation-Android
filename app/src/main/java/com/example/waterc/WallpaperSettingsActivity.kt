@@ -78,7 +78,6 @@ class WallpaperSettingsActivity : ComponentActivity() {
     }
 }
 
-// === ЗАМЕНА тела SettingsScreen ===
 @Composable
 private fun SettingsScreen(
     initial: WatercSettings,
@@ -140,9 +139,8 @@ private fun SettingsScreen(
     ) {
         Text(stringResource(R.string.settings_screen_title), fontSize = 22.sp)
 
-        // ══════════════════════════════════════════
 
-        Section("Режим симуляции") {
+        Section(stringResource(R.string.section_sim_mode)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -150,48 +148,46 @@ private fun SettingsScreen(
                 FilterChip(
                     selected = simMode == 0,
                     onClick = { simMode = 0 },
-                    label = { Text("Euler (GPU)", fontSize = 12.sp) },
+                    label = { Text(stringResource(R.string.mode_euler_gpu), fontSize = 12.sp) },
                     modifier = Modifier.weight(1f)
                 )
                 FilterChip(
                     selected = simMode == 1,
                     onClick = { simMode = 1 },
-                    label = { Text("MLS-MPM", fontSize = 12.sp) },
+                    label = { Text(stringResource(R.string.mode_mls_mpm), fontSize = 12.sp) },
                     modifier = Modifier.weight(1f)
                 )
             }
         }
 
         if (simMode == 0) {
-            Text("— Настройки Euler —",
+            Text(stringResource(R.string.section_euler_settings),
                 fontSize = 13.sp,
                 color = MaterialTheme.colorScheme.primary)
 
             Section(stringResource(R.string.section_water_color)) {
-                Text("R: ${(waterR * 255).toInt()}")
+                Text(stringResource(R.string.label_color_r, (waterR * 255).toInt()))
                 Slider(value = waterR * 255f,
                     onValueChange = { waterR = (it / 255f).coerceIn(0f, 1f) },
                     valueRange = 0f..255f, modifier = Modifier.fillMaxWidth())
-                Text("G: ${(waterG * 255).toInt()}")
+                Text(stringResource(R.string.label_color_g, (waterG * 255).toInt()))
                 Slider(value = waterG * 255f,
                     onValueChange = { waterG = (it / 255f).coerceIn(0f, 1f) },
                     valueRange = 0f..255f, modifier = Modifier.fillMaxWidth())
-                Text("B: ${(waterB * 255).toInt()}")
+                Text(stringResource(R.string.label_color_b, (waterB * 255).toInt()))
                 Slider(value = waterB * 255f,
                     onValueChange = { waterB = (it / 255f).coerceIn(0f, 1f) },
                     valueRange = 0f..255f, modifier = Modifier.fillMaxWidth())
             }
 
-            Section("Разрешение сетки (Euler)") {
-                Text("Grid size: $gridSize")
-
+            Section(stringResource(R.string.section_grid_size)) {
+                Text(stringResource(R.string.label_grid_size_value, gridSize))
                 Slider(
                     value = gridSize.toFloat(),
                     onValueChange = { gridSize = it.toInt().coerceIn(16, 64) },
                     valueRange = 16f..64f,
                     modifier = Modifier.fillMaxWidth()
                 )
-
                 Text(
                     stringResource(R.string.hint_grid_size),
                     fontSize = 11.sp
@@ -199,161 +195,180 @@ private fun SettingsScreen(
             }
 
             Section(stringResource(R.string.section_absorption)) {
-                Text(String.format(Locale.US, "%.2f", absorption))
+                Text(stringResource(R.string.label_format_float_2, absorption))
                 Slider(value = absorption,
                     onValueChange = { absorption = it.coerceIn(0f, 10f) },
                     valueRange = 0f..10f, modifier = Modifier.fillMaxWidth())
             }
+
             Section(stringResource(R.string.section_specular)) {
-                Text(String.format(Locale.US, "%.2f", specular))
+                Text(stringResource(R.string.label_format_float_2, specular))
                 Slider(value = specular,
                     onValueChange = { specular = it.coerceIn(0f, 3f) },
                     valueRange = 0f..3f, modifier = Modifier.fillMaxWidth())
             }
+
             Section(stringResource(R.string.section_raymarch)) {
-                Text("$volSteps")
+                Text(stringResource(R.string.label_fps_value, volSteps))
                 Slider(value = volSteps.toFloat(),
                     onValueChange = { volSteps = it.toInt().coerceIn(8, 128) },
                     valueRange = 8f..128f, modifier = Modifier.fillMaxWidth())
             }
+
             Section(stringResource(R.string.section_damping)) {
-                Text(String.format(Locale.US, "%.4f", damping))
+                Text(stringResource(R.string.label_format_float_4, damping))
                 Slider(value = damping,
                     onValueChange = { damping = it.coerceIn(0.9f, 1f) },
                     valueRange = 0.9f..1f, modifier = Modifier.fillMaxWidth())
             }
         }
 
-
         if (simMode == 1) {
-            Text("— Настройки MLS-MPM —",
+            Text(stringResource(R.string.section_mpm_settings),
                 fontSize = 13.sp,
                 color = MaterialTheme.colorScheme.primary)
 
-            Section("Разрешение сетки MLS-MPM") {
-                Text("MPM grid size: $mpmGridSize")
-
+            Section(stringResource(R.string.section_mpm_grid_size)) {
+                Text(stringResource(R.string.label_mpm_grid_size_value, mpmGridSize))
                 Slider(
                     value = mpmGridSize.toFloat(),
                     onValueChange = { mpmGridSize = it.toInt().coerceIn(32, 80) },
                     valueRange = 32f..80f,
                     modifier = Modifier.fillMaxWidth()
                 )
-
                 Text(
-                    "Влияет только на MLS-MPM. Не связано с Euler Grid size.",
+                    stringResource(R.string.hint_mpm_grid_size),
                     fontSize = 11.sp
                 )
             }
 
-            Section("Сценарий") {
+            Section(stringResource(R.string.section_scenario)) {
                 Row(modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf(0 to "Dam Break", 1 to "Water Drop", 2 to "Dual Wave")
-                        .forEach { (sc, label) ->
-                            FilterChip(
-                                selected = scenario == sc,
-                                onClick = { scenario = sc },
-                                label = { Text(label, fontSize = 11.sp) },
-                                modifier = Modifier.weight(1f))
-                        }
+                    listOf(
+                        0 to R.string.scenario_dam_break,
+                        1 to R.string.scenario_water_drop,
+                        2 to R.string.scenario_dual_wave
+                    ).forEach { (sc, labelRes) ->
+                        FilterChip(
+                            selected = scenario == sc,
+                            onClick = { scenario = sc },
+                            label = { Text(stringResource(labelRes), fontSize = 11.sp) },
+                            modifier = Modifier.weight(1f))
+                    }
                 }
             }
-            Section("Скорость симуляции") {
-                Text(String.format(Locale.US, "%.2f", simSpeed))
+
+            Section(stringResource(R.string.section_sim_speed)) {
+                Text(stringResource(R.string.label_format_float_2, simSpeed))
                 Slider(value = simSpeed,
                     onValueChange = { simSpeed = it.coerceIn(0.3f, 1.0f) },
                     valueRange = 0.3f..1.0f, modifier = Modifier.fillMaxWidth())
             }
-            Section("Цвет воды") {
-                Text("R: ${(mpmWaterR * 255).toInt()}")
+
+            Section(stringResource(R.string.section_water_color)) {
+                Text(stringResource(R.string.label_color_r, (mpmWaterR * 255).toInt()))
                 Slider(value = mpmWaterR * 255f,
                     onValueChange = { mpmWaterR = (it / 255f).coerceIn(0f, 1f) },
                     valueRange = 0f..255f, modifier = Modifier.fillMaxWidth())
-                Text("G: ${(mpmWaterG * 255).toInt()}")
+                Text(stringResource(R.string.label_color_g, (mpmWaterG * 255).toInt()))
                 Slider(value = mpmWaterG * 255f,
                     onValueChange = { mpmWaterG = (it / 255f).coerceIn(0f, 1f) },
                     valueRange = 0f..255f, modifier = Modifier.fillMaxWidth())
-                Text("B: ${(mpmWaterB * 255).toInt()}")
+                Text(stringResource(R.string.label_color_b, (mpmWaterB * 255).toInt()))
                 Slider(value = mpmWaterB * 255f,
                     onValueChange = { mpmWaterB = (it / 255f).coerceIn(0f, 1f) },
                     valueRange = 0f..255f, modifier = Modifier.fillMaxWidth())
             }
-            Section("Прозрачность воды") {
-                Text(String.format(Locale.US, "%.2f", mpmWaterOpacity))
+
+            Section(stringResource(R.string.section_mpm_opacity)) {
+                Text(stringResource(R.string.label_format_float_2, mpmWaterOpacity))
                 Slider(value = mpmWaterOpacity,
                     onValueChange = { mpmWaterOpacity = it.coerceIn(0.1f, 1f) },
                     valueRange = 0.1f..1f, modifier = Modifier.fillMaxWidth())
             }
-            Section("Радиус частиц") {
-                Text(String.format(Locale.US, "%.2f", mpmParticleRadius))
+
+            Section(stringResource(R.string.section_mpm_radius)) {
+                Text(stringResource(R.string.label_format_float_2, mpmParticleRadius))
                 Slider(value = mpmParticleRadius,
                     onValueChange = { mpmParticleRadius = it.coerceIn(0.35f, 1.1f) },
                     valueRange = 0.35f..1.1f, modifier = Modifier.fillMaxWidth())
             }
-            Section("Стиль рендера") {
+
+            Section(stringResource(R.string.section_mpm_render_style)) {
                 Row(modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    listOf(0 to "Объём", 1 to "Сферы", 2 to "Кристалл", 3 to "Скорость")
-                        .forEach { (style, label) ->
-                            FilterChip(
-                                selected = mpmRenderStyle == style,
-                                onClick = { mpmRenderStyle = style },
-                                label = { Text(label, fontSize = 10.sp) },
-                                modifier = Modifier.weight(1f))
-                        }
+                    listOf(
+                        0 to R.string.style_volume,
+                        1 to R.string.style_spheres,
+                        2 to R.string.style_crystal,
+                        3 to R.string.style_velocity
+                    ).forEach { (style, labelRes) ->
+                        FilterChip(
+                            selected = mpmRenderStyle == style,
+                            onClick = { mpmRenderStyle = style },
+                            label = { Text(stringResource(labelRes), fontSize = 10.sp) },
+                            modifier = Modifier.weight(1f))
+                    }
                 }
             }
-            Section("Сила тача") {
-                Text(String.format(Locale.US, "%.2f", mpmTouchStrength))
+
+            Section(stringResource(R.string.section_mpm_touch_strength)) {
+                Text(stringResource(R.string.label_format_float_2, mpmTouchStrength))
                 Slider(value = mpmTouchStrength,
                     onValueChange = { mpmTouchStrength = it.coerceIn(0.2f, 3f) },
                     valueRange = 0.2f..3f, modifier = Modifier.fillMaxWidth())
             }
         }
 
-        Text("— Общие настройки —",
+        Text(stringResource(R.string.section_common_settings),
             fontSize = 13.sp,
             color = MaterialTheme.colorScheme.primary)
 
         Section(stringResource(R.string.section_water_amount)) {
-            Text(String.format(Locale.US, "%.2f×", waterAmount))
+            Text(stringResource(R.string.label_format_multiplier, waterAmount))
             Slider(value = waterAmount,
                 onValueChange = { waterAmount = it.coerceIn(0.1f, 2.0f) },
                 valueRange = 0.1f..2.0f, modifier = Modifier.fillMaxWidth())
             Text(stringResource(R.string.hint_water_amount), fontSize = 11.sp)
         }
+
         Section(stringResource(R.string.section_gravity)) {
-            Text(String.format(Locale.US, "%.2f", gravityStrength))
+            Text(stringResource(R.string.label_format_float_2, gravityStrength))
             Slider(value = gravityStrength,
                 onValueChange = { gravityStrength = it.coerceIn(0f, 8f) },
                 valueRange = 0f..8f, modifier = Modifier.fillMaxWidth())
         }
+
         Section(stringResource(R.string.section_tilt)) {
-            Text(String.format(Locale.US, "%.2f", tiltSensitivity))
+            Text(stringResource(R.string.label_format_float_2, tiltSensitivity))
             Slider(value = tiltSensitivity,
                 onValueChange = { tiltSensitivity = it.coerceIn(0f, 3f) },
                 valueRange = 0f..3f, modifier = Modifier.fillMaxWidth())
         }
+
         Section(stringResource(R.string.section_render_scale)) {
-            Text(String.format(Locale.US, "%.2f", renderScale))
+            Text(stringResource(R.string.label_format_float_2, renderScale))
             Slider(value = renderScale,
                 onValueChange = { renderScale = it.coerceIn(0.25f, 1f) },
                 valueRange = 0.25f..1f, modifier = Modifier.fillMaxWidth())
         }
+
         Section(stringResource(R.string.section_target_fps)) {
-            Text("$targetFps")
+            Text(stringResource(R.string.label_fps_value, targetFps))
             Slider(value = targetFps.toFloat(),
                 onValueChange = { targetFps = it.toInt().coerceIn(15, 120) },
                 valueRange = 15f..120f, modifier = Modifier.fillMaxWidth())
         }
+
         Section(stringResource(R.string.section_grid_size)) {
-            Text("Grid size: $gridSize")
+            Text(stringResource(R.string.label_grid_size_value, gridSize))
             Slider(value = gridSize.toFloat(),
                 onValueChange = { gridSize = it.toInt().coerceIn(16, 128) },
                 valueRange = 16f..128f, modifier = Modifier.fillMaxWidth())
             Text(stringResource(R.string.hint_grid_size), fontSize = 11.sp)
         }
+
         Section(stringResource(R.string.section_accelerometer)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Switch(checked = accelEnabled, onCheckedChange = { accelEnabled = it })
@@ -362,7 +377,7 @@ private fun SettingsScreen(
             }
         }
 
-        // Кнопки
+
         Button(onClick = { onSave(currentSettings()) },
             modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.settings_save_button))
@@ -370,41 +385,24 @@ private fun SettingsScreen(
         OutlinedButton(
             onClick = {
                 WatercSettings.reset(context, synchronous = true)
-
                 val d = WatercSettings()
-
-                waterR = d.waterR
-                waterG = d.waterG
-                waterB = d.waterB
-                absorption = d.absorption
-                specular = d.specular
-                volSteps = d.volSteps
-                gravityStrength = d.gravityStrength
-                damping = d.damping
-                simSpeed = d.simSpeed
-                tiltSensitivity = d.tiltSensitivity
-                renderScale = d.renderScale
-                targetFps = d.targetFps
-                gridSize = d.gridSize
-                mpmGridSize = d.mpmGridSize
-                particleCount = d.particleCount
-                mpmWaterR = d.mpmWaterR
-                mpmWaterG = d.mpmWaterG
-                mpmWaterB = d.mpmWaterB
-                mpmWaterOpacity = d.mpmWaterOpacity
-                mpmParticleRadius = d.mpmParticleRadius
-                mpmRenderStyle = d.mpmRenderStyle
-                mpmTouchStrength = d.mpmTouchStrength
-                accelEnabled = d.accelEnabled
-                waterAmount = d.waterAmount
-                simMode = d.simMode
-                scenario = d.scenario
+                waterR = d.waterR; waterG = d.waterG; waterB = d.waterB
+                absorption = d.absorption; specular = d.specular
+                volSteps = d.volSteps; gravityStrength = d.gravityStrength
+                damping = d.damping; simSpeed = d.simSpeed
+                tiltSensitivity = d.tiltSensitivity; renderScale = d.renderScale
+                targetFps = d.targetFps; gridSize = d.gridSize
+                mpmGridSize = d.mpmGridSize; particleCount = d.particleCount
+                mpmWaterR = d.mpmWaterR; mpmWaterG = d.mpmWaterG; mpmWaterB = d.mpmWaterB
+                mpmWaterOpacity = d.mpmWaterOpacity; mpmParticleRadius = d.mpmParticleRadius
+                mpmRenderStyle = d.mpmRenderStyle; mpmTouchStrength = d.mpmTouchStrength
+                accelEnabled = d.accelEnabled; waterAmount = d.waterAmount
+                simMode = d.simMode; scenario = d.scenario
             },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(stringResource(R.string.settings_reset_button))
         }
-
 
         Row(
             modifier = Modifier.fillMaxWidth()
@@ -425,6 +423,7 @@ private fun SettingsScreen(
                 textDecoration = TextDecoration.Underline,
                 modifier = Modifier.padding(start = 8.dp))
         }
+
         ExpandableLicenseSection()
     }
 }
@@ -486,7 +485,7 @@ private fun ExpandableLicenseSection() {
                     text = "App License",
                     fontSize = 10.sp,
                     lineHeight = 14.sp,
-                   textAlign = TextAlign.Center,
+                    textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
                 Text(

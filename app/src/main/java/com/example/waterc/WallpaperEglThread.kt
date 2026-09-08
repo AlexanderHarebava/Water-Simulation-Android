@@ -303,7 +303,7 @@ class WallpaperEglThread(
                         simulation.applyVisualSettings(newSettings)
 
                         appliedSettings = newSettings
-                    } else if (oldSettings != newSettings) {          // FIX: только при изменении
+                    } else if (oldSettings != newSettings) {
                         if (
                             newSettings.simMode == FluidSimulation.MODE_MPM &&
                             oldSettings != null &&
@@ -366,8 +366,7 @@ class WallpaperEglThread(
                 }
             }
         } finally {
-            // Уничтожаем симуляцию, пока EGL-контекст ещё текущий,
-            // иначе glDelete* из другого потока молча не сработают.
+
             try {
                 simulation.destroy()
             } catch (t: Throwable) {

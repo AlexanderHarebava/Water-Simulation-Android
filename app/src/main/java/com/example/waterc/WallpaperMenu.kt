@@ -29,13 +29,14 @@ fun WallpaperMenu(
     onApplyClicked: () -> Unit,
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
-){
+) {
     var expanded by remember { mutableStateOf(false) }
     var gridSize by remember { mutableIntStateOf(initialGridSize) }
     var textInput by remember { mutableStateOf(initialGridSize.toString()) }
     var simMode by remember { mutableIntStateOf(initialSimMode) }
     var particleCount by remember { mutableIntStateOf(initialParticleCount) }
     var mpmRenderStyle by remember { mutableIntStateOf(initialMpmRenderStyle) }
+
     Column(
         modifier = modifier
             .navigationBarsPadding()
@@ -62,8 +63,8 @@ fun WallpaperMenu(
                         color = MaterialTheme.colorScheme.onSurface
                     )
 
-                    // === Режим симуляции ===
-                    Text("Режим симуляции", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface)
+
+                    Text(stringResource(R.string.section_sim_mode), fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -71,22 +72,22 @@ fun WallpaperMenu(
                         FilterChip(
                             selected = simMode == 0,
                             onClick = { simMode = 0; onSimModeSelected(0) },
-                            label = { Text("Euler (GPU)", fontSize = 12.sp) },
+                            label = { Text(stringResource(R.string.mode_euler_gpu), fontSize = 12.sp) },
                             modifier = Modifier.weight(1f)
                         )
                         FilterChip(
                             selected = simMode == 1,
                             onClick = { simMode = 1; onSimModeSelected(1) },
-                            label = { Text("MLS-MPM", fontSize = 12.sp) },
+                            label = { Text(stringResource(R.string.mode_mls_mpm), fontSize = 12.sp) },
                             modifier = Modifier.weight(1f)
                         )
                     }
+
                     Text(
-                        text = "Стиль воды (MLS-MPM)",
+                        text = stringResource(R.string.section_mpm_water_style),
                         fontSize = 13.sp,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -97,23 +98,23 @@ fun WallpaperMenu(
                                 mpmRenderStyle = 0
                                 onMpmRenderStyleSelected(0)
                             },
-                            label = { Text("Объём", fontSize = 12.sp) },
+                            label = { Text(stringResource(R.string.style_volume), fontSize = 12.sp) },
                             modifier = Modifier.weight(1f)
                         )
-
                         FilterChip(
                             selected = mpmRenderStyle == 1,
                             onClick = {
                                 mpmRenderStyle = 1
                                 onMpmRenderStyleSelected(1)
                             },
-                            label = { Text("Сферы", fontSize = 12.sp) },
+                            label = { Text(stringResource(R.string.style_spheres), fontSize = 12.sp) },
                             modifier = Modifier.weight(1f)
                         )
                     }
-                    // === Условные контролы ===
+
+
                     if (simMode == 0) {
-                        // Euler: GridSize
+
                         Text(
                             text = stringResource(R.string.menu_grid_desc),
                             fontSize = 11.sp,
@@ -121,7 +122,7 @@ fun WallpaperMenu(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "Grid size: $gridSize",
+                            text = stringResource(R.string.label_grid_size_value, gridSize),
                             fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -151,9 +152,9 @@ fun WallpaperMenu(
                             modifier = Modifier.fillMaxWidth()
                         )
                     } else {
-                        // MPM: ParticleCount
+
                         Text(
-                            text = "Количество частиц (MLS-MPM)",
+                            text = stringResource(R.string.section_particle_count),
                             fontSize = 13.sp,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -161,20 +162,18 @@ fun WallpaperMenu(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            listOf(25000, 40000, 70000).forEach { count ->
-                                val label = when (count) {
-                                    25000 -> "25K"
-                                    40000 -> "40K"
-                                    70000 -> "70K"
-                                    else -> "$count"
-                                }
+                            listOf(
+                                25000 to R.string.particle_count_25k,
+                                40000 to R.string.particle_count_40k,
+                                70000 to R.string.particle_count_70k
+                            ).forEach { (count, labelRes) ->
                                 FilterChip(
                                     selected = particleCount == count,
                                     onClick = {
                                         particleCount = count
                                         onParticleCountSelected(count)
                                     },
-                                    label = { Text(label, fontSize = 12.sp) },
+                                    label = { Text(stringResource(labelRes), fontSize = 12.sp) },
                                     modifier = Modifier.weight(1f)
                                 )
                             }
@@ -196,6 +195,7 @@ fun WallpaperMenu(
                 }
             }
         }
+
         SmallFloatingActionButton(
             onClick = { expanded = !expanded },
             containerColor = MaterialTheme.colorScheme.primaryContainer,

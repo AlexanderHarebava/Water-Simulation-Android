@@ -1,22 +1,25 @@
 <resources>
     <string name="app_name" translatable="false">Water Wallpaper Box</string>
-    <string name="wallpaper_label">С++ Water Simulation on Android</string>
+    <string name="wallpaper_label">C++ Water Simulation on Android</string>
     <string name="wallpaper_description">Interactive 3D fluid simulation: the wallpaper fills the entire screen, with gravity responding to device tilt. The camera is static.</string>
     <string name="wallpaper_settings_title">waterc Wallpaper Settings</string>
-
     <string name="author_credit">Author Alexander Harebava</string>
-    <string name="menu_title">С++ Water Simulation on Android</string>
+
+    <!-- Menu -->
+    <string name="menu_title">C++ Water Simulation on Android</string>
     <string name="menu_grid_desc">Fluid detail level. Higher values look better, but increase GPU load. Better use 32</string>
     <string name="menu_apply_button">Apply Live Wallpaper</string>
     <string name="menu_full_settings_button">All Settings</string>
     <string name="menu_close">Close Menu</string>
     <string name="menu_open">Open Menu</string>
 
-
+    <!-- Settings Screen -->
     <string name="settings_screen_title">Simulation Settings</string>
     <string name="settings_save_button">Save &amp; Close</string>
     <string name="settings_reset_button">Reset to Defaults</string>
 
+    <!-- Sections & Labels -->
+    <string name="section_sim_mode">Simulation Mode</string>
     <string name="section_water_color">Water Color</string>
     <string name="section_absorption">Turbidity &amp; Light Absorption</string>
     <string name="section_specular">Highlight Intensity</string>
@@ -29,13 +32,49 @@
     <string name="section_target_fps">Target Frame Rate</string>
     <string name="section_grid_size">Simulation Resolution</string>
     <string name="section_accelerometer">Tilt Control</string>
+    <string name="section_mpm_water_style">Water Style (MLS-MPM)</string>
+    <string name="section_particle_count">Particle Count (MLS-MPM)</string>
+    <string name="section_mpm_grid_size">MLS-MPM Grid Resolution</string>
+    <string name="section_scenario">Scenario</string>
+    <string name="section_sim_speed">Simulation Speed</string>
+    <string name="section_mpm_opacity">Water Opacity</string>
+    <string name="section_mpm_radius">Particle Radius</string>
+    <string name="section_mpm_render_style">Render Style</string>
+    <string name="section_mpm_touch_strength">Touch Strength</string>
+    <string name="section_common_settings">Common Settings</string>
+    <string name="section_euler_settings">Euler Settings</string>
+    <string name="section_mpm_settings">MLS-MPM Settings</string>
 
-
+    <!-- Hints & Values -->
     <string name="hint_water_amount">Volume of water in the initial sphere. 1.00 is normal.</string>
     <string name="hint_grid_size">Higher values yield finer fluid detail, but demand more performance.</string>
     <string name="hint_accel_toggle">Tilting the device controls flow</string>
+    <string name="hint_mpm_grid_size">Affects only MLS-MPM. Not related to Euler Grid size.</string>
+    <string name="label_color_r">R: %d</string>
+    <string name="label_color_g">G: %d</string>
+    <string name="label_color_b">B: %d</string>
+    <string name="label_grid_size_value">Grid size: %d</string>
+    <string name="label_mpm_grid_size_value">MPM grid size: %d</string>
+    <string name="label_format_float_2">%.2f</string>
+    <string name="label_format_float_4">%.4f</string>
+    <string name="label_format_multiplier">%.2f×</string>
+    <string name="label_fps_value">%d</string>
 
+    <!-- Chips / Options -->
+    <string name="mode_euler_gpu">Euler (GPU)</string>
+    <string name="mode_mls_mpm">MLS-MPM</string>
+    <string name="style_volume">Volume</string>
+    <string name="style_spheres">Spheres</string>
+    <string name="style_crystal">Crystal</string>
+    <string name="style_velocity">Velocity</string>
+    <string name="scenario_dam_break">Dam Break</string>
+    <string name="scenario_water_drop">Water Drop</string>
+    <string name="scenario_dual_wave">Dual Wave</string>
+    <string name="particle_count_25k">25K</string>
+    <string name="particle_count_40k">40K</string>
+    <string name="particle_count_70k">70K</string>
 
+    <!-- Performance Overlay -->
     <string name="perf_label_frame">FRAME</string>
     <string name="perf_label_cpu">CPU</string>
     <string name="perf_label_gpu">GPU</string>
@@ -44,4 +83,9 @@
     <string name="perf_na">N/A</string>
     <string name="perf_charging">charging</string>
     <string name="perf_full">full</string>
+
+    <!-- License -->
+    <string name="license_title">LICENSE</string>
+    <string name="license_credit_label">Credit:</string>
+    <string name="license_app_title">App License</string>
 </resources>

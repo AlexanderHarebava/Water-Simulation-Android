@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 
 data class WatercSettings(
-    // === Euler (GPU / CPU) ===
+
     val waterR: Float = DEFAULT_WATER_R,
     val waterG: Float = DEFAULT_WATER_G,
     val waterB: Float = DEFAULT_WATER_B,
@@ -18,10 +18,10 @@ data class WatercSettings(
     val mpmWaterB: Float = DEFAULT_MPM_WATER_B,
     val mpmWaterOpacity: Float = DEFAULT_MPM_WATER_OPACITY,
     val mpmParticleRadius: Float = DEFAULT_MPM_PARTICLE_RADIUS,
-    val mpmRenderStyle: Int = DEFAULT_MPM_RENDER_STYLE, // 0=Volume, 1=Spheres, 2=Crystal, 3=Velocity
+    val mpmRenderStyle: Int = DEFAULT_MPM_RENDER_STYLE,
     val mpmTouchStrength: Float = DEFAULT_MPM_TOUCH_STRENGTH,
 
-    // === Общие ===
+
     val gravityStrength: Float = DEFAULT_GRAVITY_STRENGTH,
     val damping: Float = DEFAULT_DAMPING,
     val tiltSensitivity: Float = DEFAULT_TILT_SENSITIVITY,
@@ -47,7 +47,7 @@ data class WatercSettings(
         const val KEY_SPECULAR = "specular"
         const val KEY_VOL_STEPS = "vol_steps"
 
-        // MPM
+
         const val KEY_MPM_WATER_R = "mpm_water_r"
         const val KEY_MPM_WATER_G = "mpm_water_g"
         const val KEY_MPM_WATER_B = "mpm_water_b"
@@ -56,7 +56,7 @@ data class WatercSettings(
         const val KEY_MPM_RENDER_STYLE = "mpm_render_style"
         const val KEY_MPM_TOUCH_STRENGTH = "mpm_touch_strength"
 
-        // Общие
+
         const val KEY_WATER_AMOUNT = "water_amount"
         const val KEY_SIM_MODE = "sim_mode"
         const val KEY_SCENARIO = "scenario"
@@ -69,7 +69,7 @@ data class WatercSettings(
         const val KEY_GRID_SIZE = "grid_size"
         const val KEY_ACCEL_ENABLED = "accel_enabled"
 
-        // Defaults Euler
+
         const val DEFAULT_WATER_R = 0.069f
         const val DEFAULT_WATER_G = 0.181f
         const val DEFAULT_WATER_B = 0.314f
@@ -87,7 +87,7 @@ data class WatercSettings(
         const val DEFAULT_MPM_RENDER_STYLE = 0
         const val DEFAULT_MPM_TOUCH_STRENGTH = 2.9f
 
-        // Общие
+
         const val DEFAULT_SIM_MODE = 1
         const val DEFAULT_SCENARIO = 0
         const val DEFAULT_PARTICLE_COUNT = 40000
@@ -126,7 +126,7 @@ data class WatercSettings(
                 mpmRenderStyle = p.getInt(KEY_MPM_RENDER_STYLE, DEFAULT_MPM_RENDER_STYLE).coerceIn(0, 3),
                 mpmTouchStrength = p.getFloat(KEY_MPM_TOUCH_STRENGTH, DEFAULT_MPM_TOUCH_STRENGTH).coerceIn(0.2f, 3f),
 
-                // Общие
+
                 particleCount = p.getInt(KEY_PARTICLE_COUNT, DEFAULT_PARTICLE_COUNT).coerceIn(10000, 100000),
                 simMode = p.getInt(KEY_SIM_MODE, DEFAULT_SIM_MODE).coerceIn(0, 1),
                 scenario = p.getInt(KEY_SCENARIO, DEFAULT_SCENARIO).coerceIn(0, 2),
@@ -156,7 +156,7 @@ data class WatercSettings(
             editor.putFloat(KEY_SPECULAR, settings.specular)
             editor.putInt(KEY_VOL_STEPS, settings.volSteps)
 
-            // MPM
+
             editor.putFloat(KEY_MPM_WATER_R, settings.mpmWaterR)
             editor.putFloat(KEY_MPM_WATER_G, settings.mpmWaterG)
             editor.putFloat(KEY_MPM_WATER_B, settings.mpmWaterB)
@@ -165,7 +165,7 @@ data class WatercSettings(
             editor.putInt(KEY_MPM_RENDER_STYLE, settings.mpmRenderStyle)
             editor.putFloat(KEY_MPM_TOUCH_STRENGTH, settings.mpmTouchStrength)
 
-            // Общие
+
             editor.putFloat(KEY_WATER_AMOUNT, settings.waterAmount)
             editor.putInt(KEY_SIM_MODE, settings.simMode)
             editor.putInt(KEY_SCENARIO, settings.scenario)

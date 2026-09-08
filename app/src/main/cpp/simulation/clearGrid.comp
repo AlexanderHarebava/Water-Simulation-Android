@@ -1,0 +1,15 @@
+#version 310 es
+layout(local_size_x = 64) in;
+
+struct Cell { int vx; int vy; int vz; int mass; };
+layout(std430, binding = 0) buffer Cells { Cell cells[]; };
+uniform int uGridCount;
+
+void main() {
+    uint id = gl_GlobalInvocationID.x;
+    if (id >= uint(uGridCount)) return;
+    cells[id].vx = 0;
+    cells[id].vy = 0;
+    cells[id].vz = 0;
+    cells[id].mass = 0;
+}

@@ -63,39 +63,51 @@ waterc/
 └── app/
     └── src/
         └── main/
-            ├── cpp/                          # C++ Native Fluid Engine & Renderer
-            │   ├── rendering/                # OpenGL ES Raymarching & Shaders
-            │   │   ├── GLRenderer.cpp        # 3D Ray-marching volume renderer engine
+            ├── cpp/                                # C++ Native Fluid Engine & Renderer
+            │   ├── rendering/                      # OpenGL ES Raymarching & Shaders
+            │   │   ├── GLRenderer.cpp              # 3D Ray-marching volume & MPM sphere instancing renderer
             │   │   ├── GLRenderer.h
-            │   │   ├── Shader.cpp            # Shader compilation and management
+            │   │   ├── Shader.cpp                  # Shader compilation, linking, and uniform management
             │   │   └── Shader.h
-            │   └── simulation/               # 3D Fluid Dynamics Simulation Engine
-            │       ├── Advect.cpp            # Semi-Lagrangian advection
-            │       ├── Advect.h
-            │       ├── config.cpp            # Fluid simulation global configuration
-            │       ├── config.h
-            │       ├── ConjugateGradient.cpp # CG / PCG solvers for pressure projection
-            │       ├── ConjugateGradient.h
-            │       ├── Fluids.cpp            # Main CPU fluid simulation pipeline
-            │       ├── Fluids.h
-            │       ├── FluidsGPU.cpp         # GLES 3.1 Compute Shader fluid backend
-            │       ├── FluidsGPU.h
-            │       ├── Project.cpp           # Divergence free field projection
-            │       ├── Project.h
-            │       ├── StaggeredGrid.h       # MAC (Marker-and-Cell) Staggered Grid structure
-            │       └── types.h               # Data structures, Field grids & labels
-            └── java/com/example/waterc/      # Kotlin Android Application & UI
-                ├── FluidGLSurfaceView.kt     # Custom GLSurfaceView component
-                ├── FluidSimulation.kt        # JNI / Kotlin interface to NDK engine
-                ├── FluidWallpaperService.kt # Android Live Wallpaper Service setup
-                ├── FpsMeter.kt               # Performance frame tracking
-                ├── MainActivity.kt           # Main application entry point
-                ├── PerformanceMonitor.kt     # Metric collection
-                ├── PerformanceOverlay.kt     # UI overlay for statistics
-                ├── WallpaperEglThread.kt     # EGL context worker thread for wallpaper
-                ├── WallpaperMenu.kt          # Settings overlay UI
-                ├── WallpaperSettingsActivity.kt # Wallpaper configuration screen
-                └── WatercSettings.kt         # User preferences state management
+            │   ├── simulation/                     # 3D Fluid Dynamics Simulation Engine
+            │   │   ├── Advect.cpp                  # Semi-Lagrangian advection implementations (2D & 3D)
+            │   │   ├── Advect.h
+            │   │   ├── config.cpp                  # Global fluid simulation parameters and configuration
+            │   │   ├── config.h
+            │   │   ├── ConjugateGradient.cpp       # CG / PCG solvers and incomplete Cholesky preconditioning
+            │   │   ├── ConjugateGradient.h
+            │   │   ├── Fluids.cpp                  # CPU-based 3D Level-Set fluid simulation engine
+            │   │   ├── Fluids.h
+            │   │   ├── FluidsGPU.cpp               # GLES 3.1 Compute Shader Eulerian fluid backend
+            │   │   ├── FluidsGPU.h
+            │   │   ├── FluidsMPMGPU.cpp            # GLES 3.1 Compute Shader MPM (MLS-MPM) particle backend
+            │   │   ├── FluidsMPMGPU.h
+            │   │   ├── p2gDensity.comp             # Compute shader for particle-to-grid density mapping
+            │   │   ├── Project.cpp                 # Divergence-free velocity field pressure projection
+            │   │   ├── Project.h
+            │   │   ├── StaggeredGrid.h             # MAC (Marker-and-Cell) staggered grid data structures
+            │   │   └── types.h                     # Data structures, field grids, and cell labels
+            │   ├── CMakeLists.txt                  # NDK CMake build configuration and library links
+            │   ├── jni_bridge.cpp                  # Native JNI bridge exposing C++ engine functions to Java/Kotlin
+            │   └── jni_bridge.h
+            └── java/com/example/waterc/            # Kotlin Android Application & UI
+                ├── ui/
+                │   └── theme/                      # Jetpack Compose UI styling components
+                │       ├── Color.kt                # Application color definitions
+                │       ├── Theme.kt                # Material Theme provider configuration
+                │       └── Type.kt                 # Material typography styles
+                ├── FluidGLSurfaceView.kt           # Custom GLSurfaceView component
+                ├── FluidSimulation.kt              # JNI / Kotlin interface to NDK engine
+                ├── FluidWallpaperService.kt        # Android Live Wallpaper Service setup
+                ├── FpsMeter.kt                     # Performance frame tracking
+                ├── MainActivity.kt                  # Main application entry point
+                ├── PerformanceMonitor.kt            # Metric collection
+                ├── PerformanceOverlay.kt           # UI overlay for statistics
+                ├── WallpaperEglThread.kt            # EGL context worker thread for wallpaper
+                ├── WallpaperMenu.kt                 # Settings overlay UI
+                ├── WallpaperSettingsActivity.kt    # Wallpaper configuration screen
+                └── WatercSettings.kt                # User preferences state management
+
 ```
 
 ---

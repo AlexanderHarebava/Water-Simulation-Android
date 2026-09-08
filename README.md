@@ -49,6 +49,10 @@ https://github.com/user-attachments/assets/19653bfd-6058-4293-87f1-d32686cca72a
 
 
 
+## New Mode
+
+https://github.com/user-attachments/assets/1e01f116-96f9-4674-8962-c14b87864d0b
+
 
 
 

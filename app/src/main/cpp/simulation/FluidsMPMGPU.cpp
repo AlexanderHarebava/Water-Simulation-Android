@@ -1,26 +1,3 @@
-/* MIT License
-
-Copyright (c) 2026 Alexander Harebava
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.*/
-
-
 #include "FluidsMPMGPU.h"
 #include <vector>
 #include <cstring>
@@ -250,21 +227,16 @@ uniform vec3  uPointerForce;
 uniform float uPointerRadius;
 uniform float uPointerStrength;
 uniform int   uPointerActive;
-
 int   encodeF(float x) { return int(x * uFixedM); }
 float decodeF(int   x) { return float(x) * uFixedMInv; }
-
 void main() {
     int id = int(gl_GlobalInvocationID.x);
     if (id >= uGridCount) return;
     if (cells[id].mass == 0) return;
-
     float mass = decodeF(cells[id].mass);
     vec3 vel = vec3(decodeF(cells[id].vx), decodeF(cells[id].vy),
                     decodeF(cells[id].vz)) / max(mass, 0.0001);
-
     vel += uGravity * uDt;
-
 
     if (uPointerActive > 0) {
         int sz = int(uBoxSize.z);
@@ -277,28 +249,52 @@ void main() {
         float d2 = dot(diff, diff);
         float r2 = uPointerRadius * uPointerRadius;
         if (d2 < r2) {
-
             float falloff = smoothstep(r2, 0.0, d2);
             vel += uPointerForce * (falloff * uPointerStrength * 0.2);
         }
     }
-
 
     int sz = int(uBoxSize.z);
     int sy = int(uBoxSize.y);
     int cz = id % sz;
     int cy = (id / sz) % sy;
     int cx = id / (sz * sy);
-    if (cx < 2 || cx > int(uRealBoxSize.x) - 3) vel.x = 0.0;
-    if (cy < 2 || cy > int(uRealBoxSize.y) - 3) vel.y = 0.0;
-    if (cz < 2 || cz > int(uRealBoxSize.z) - 3) vel.z = 0.0;
+
+    // Boundary: only zero the component moving INTO the wall,
+    // and add a small repulsion to prevent sticking
+    float wallMargin = 3.0;
+    float repulsion = 0.4;
+
+    if (float(cx) < wallMargin) {
+        if (vel.x < 0.0) vel.x = 0.0;
+        vel.x += repulsion * (wallMargin - float(cx)) / wallMargin;
+    }
+    if (float(cx) > uRealBoxSize.x - 1.0 - wallMargin) {
+        if (vel.x > 0.0) vel.x = 0.0;
+        vel.x -= repulsion * (float(cx) - (uRealBoxSize.x - 1.0 - wallMargin)) / wallMargin;
+    }
+    if (float(cy) < wallMargin) {
+        if (vel.y < 0.0) vel.y = 0.0;
+        vel.y += repulsion * (wallMargin - float(cy)) / wallMargin;
+    }
+    if (float(cy) > uRealBoxSize.y - 1.0 - wallMargin) {
+        if (vel.y > 0.0) vel.y = 0.0;
+        vel.y -= repulsion * (float(cy) - (uRealBoxSize.y - 1.0 - wallMargin)) / wallMargin;
+    }
+    if (float(cz) < wallMargin) {
+        if (vel.z < 0.0) vel.z = 0.0;
+        vel.z += repulsion * (wallMargin - float(cz)) / wallMargin;
+    }
+    if (float(cz) > uRealBoxSize.z - 1.0 - wallMargin) {
+        if (vel.z > 0.0) vel.z = 0.0;
+        vel.z -= repulsion * (float(cz) - (uRealBoxSize.z - 1.0 - wallMargin)) / wallMargin;
+    }
 
     cells[id].vx = encodeF(vel.x);
     cells[id].vy = encodeF(vel.y);
     cells[id].vz = encodeF(vel.z);
 }
 )GLSL";
-
 
 
 
@@ -314,9 +310,7 @@ uniform vec3  uRealBoxSize;
 uniform float uDt;
 uniform float uFixedMInv;
 uniform int   uGridCount;
-
 float decodeF(int x) { return float(x) * uFixedMInv; }
-
 void main() {
     int id = int(gl_GlobalInvocationID.x);
     if (id >= uNumParticles) return;
@@ -327,44 +321,40 @@ void main() {
     w[0] = 0.5 * (0.5 - cellDiff) * (0.5 - cellDiff);
     w[1] = 0.75 - cellDiff * cellDiff;
     w[2] = 0.5 * (0.5 + cellDiff) * (0.5 + cellDiff);
-
     vec3 newVel = vec3(0.0);
     mat3 B = mat3(0.0);
-
     for (int gx = 0; gx < 3; gx++)
     for (int gy = 0; gy < 3; gy++)
     for (int gz = 0; gz < 3; gz++) {
         float weight = w[gx].x * w[gy].y * w[gz].z;
         vec3 cellX = cellIndexF + vec3(float(gx), float(gy), float(gz)) - 1.0;
         vec3 cellDist = (cellX + 0.5) - p.position;
-
         int cx = int(cellX.x); int cy = int(cellX.y); int cz = int(cellX.z);
         if (cx < 0 || cx >= int(uBoxSize.x) ||
             cy < 0 || cy >= int(uBoxSize.y) ||
             cz < 0 || cz >= int(uBoxSize.z)) continue;
-
         int ci = cx * int(uBoxSize.y) * int(uBoxSize.z)
                + cy * int(uBoxSize.z) + cz;
         if (ci < 0 || ci >= uGridCount) continue;
-
         Cell c = cells[ci];
         vec3 cellVel = vec3(decodeF(c.vx), decodeF(c.vy), decodeF(c.vz));
         vec3 wv = cellVel * weight;
         B += mat3(wv * cellDist.x, wv * cellDist.y, wv * cellDist.z);
         newVel += wv;
     }
-
     p.v = newVel;
     p.C = B * 4.0;
     p.position += p.v * uDt;
-    p.position = clamp(p.position, vec3(1.0), uRealBoxSize - 2.0);
 
+    vec3 lo = vec3(2.0);
+    vec3 hi = uRealBoxSize - vec3(3.0);
+    p.position = clamp(p.position, lo, hi);
 
-    float k = 2.0;
-    float wallStiffness = 1.0;
-    vec3 x_n = p.position + p.v * (uDt * k);
-    vec3 wallMin = vec3(3.0);
-    vec3 wallMax = uRealBoxSize - vec3(4.0);
+    float wallStiffness = 3.0;
+    vec3 x_n = p.position + p.v * (uDt * 2.0);
+    vec3 wallMin = vec3(3.5);
+    vec3 wallMax = uRealBoxSize - vec3(4.5);
+
     if (x_n.x < wallMin.x) p.v.x += wallStiffness * (wallMin.x - x_n.x);
     if (x_n.x > wallMax.x) p.v.x += wallStiffness * (wallMax.x - x_n.x);
     if (x_n.y < wallMin.y) p.v.y += wallStiffness * (wallMin.y - x_n.y);
@@ -372,10 +362,16 @@ void main() {
     if (x_n.z < wallMin.z) p.v.z += wallStiffness * (wallMin.z - x_n.z);
     if (x_n.z > wallMax.z) p.v.z += wallStiffness * (wallMax.z - x_n.z);
 
+    vec3 distToWall = min(p.position - lo, hi - p.position);
+    float minDist = min(distToWall.x, min(distToWall.y, distToWall.z));
+    if (minDist < 2.0) {
+        float damp = 0.85 + 0.15 * (minDist / 2.0);
+        p.v *= damp;
+    }
+
     particles[id] = p;
 }
 )GLSL";
-
 
 
 

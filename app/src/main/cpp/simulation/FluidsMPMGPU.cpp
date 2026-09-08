@@ -237,7 +237,10 @@ void main() {
     vec3 vel = vec3(decodeF(cells[id].vx), decodeF(cells[id].vy),
                     decodeF(cells[id].vz)) / max(mass, 0.0001);
     vel += uGravity * uDt;
-
+float maxVel = 20.0;
+if (length(vel) > maxVel) {
+    vel = normalize(vel) * maxVel;
+}
     if (uPointerActive > 0) {
         int sz = int(uBoxSize.z);
         int sy = int(uBoxSize.y);

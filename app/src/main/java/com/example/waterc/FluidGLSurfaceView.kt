@@ -64,15 +64,22 @@ class FluidGLSurfaceView(
                 }
             }
 
+            private var lastTimeNs = 0L
+            private var accumulatorNs = 0L
+            private val stepIntervalNs = 1_000_000_000L / 60L
+
             override fun onDrawFrame(gl: GL10?) {
-                fpsMeter?.onFrame(System.nanoTime())
+                val now = System.nanoTime()
+                if (lastTimeNs != 0L) {
+                    accumulatorNs += (now - lastTimeNs).coerceAtMost(100_000_000L)
+                }
+                lastTimeNs = now
 
-
-                if (settings.simMode == FluidSimulation.MODE_MPM && touchActive) {
-                    applyMpmTouchForce()
+                while (accumulatorNs >= stepIntervalNs) {
+                    simulation.step()
+                    accumulatorNs -= stepIntervalNs
                 }
 
-                simulation.step()
                 simulation.render()
             }
         })

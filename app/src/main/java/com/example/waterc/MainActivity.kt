@@ -12,22 +12,23 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.waterc.ui.theme.WatercTheme
 
 class MainActivity : ComponentActivity() {
+
     private var glView: FluidGLSurfaceView? = null
     private val fpsMeter = FpsMeter()
 
-
-    private lateinit var currentSettings: WatercSettings
+    private var currentSettings by mutableStateOf(WatercSettings())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-
         currentSettings = WatercSettings.load(this)
 
         setContent {
@@ -51,30 +52,36 @@ class MainActivity : ComponentActivity() {
                             fpsMeter = fpsMeter,
                             modifier = Modifier.align(Alignment.TopStart)
                         )
+
                         WallpaperMenu(
                             initialGridSize = currentSettings.gridSize,
                             initialSimMode = currentSettings.simMode,
                             initialParticleCount = currentSettings.particleCount,
                             initialMpmRenderStyle = currentSettings.mpmRenderStyle,
                             onGridSizeSelected = { size ->
-                                val newSettings = currentSettings.copy(gridSize = size)
-                                currentSettings = newSettings
-                                glView?.applySettings(newSettings)
+                                val s = currentSettings.copy(gridSize = size)
+                                currentSettings = s
+                                WatercSettings.save(this@MainActivity, s)
+                                glView?.applySettings(s)
                             },
                             onSimModeSelected = { mode ->
-                                val newSettings = currentSettings.copy(simMode = mode)
-                                currentSettings = newSettings
-                                glView?.applySettings(newSettings)
+                                val s = currentSettings.copy(simMode = mode)
+                                currentSettings = s
+                                WatercSettings.save(this@MainActivity, s)
+                                glView?.applySettings(s)
                             },
                             onParticleCountSelected = { count ->
-                                val newSettings = currentSettings.copy(particleCount = count)
-                                currentSettings = newSettings
-                                glView?.applySettings(newSettings)
+                                val s = currentSettings.copy(particleCount = count)
+                                currentSettings = s
+
+                                WatercSettings.save(this@MainActivity, s)
+                                glView?.applySettings(s)
                             },
                             onMpmRenderStyleSelected = { style ->
-                                val newSettings = currentSettings.copy(mpmRenderStyle = style)
-                                currentSettings = newSettings
-                                glView?.applySettings(newSettings)
+                                val s = currentSettings.copy(mpmRenderStyle = style)
+                                currentSettings = s
+                                WatercSettings.save(this@MainActivity, s)
+                                glView?.applySettings(s)
                             },
                             onApplyClicked = {
                                 applyLiveWallpaper(currentSettings)
@@ -96,11 +103,10 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun applyLiveWallpaper(settingsToApply: WatercSettings) {
+        // Здесь this — это сама Activity, поэтому ошибок нет
         WatercSettings.save(this, settingsToApply, synchronous = true)
         currentSettings = settingsToApply
-
         val component = ComponentName(this, FluidWallpaperService::class.java)
-
         try {
             val intent = Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER).apply {
                 putExtra(
@@ -126,25 +132,20 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-
-
         currentSettings = WatercSettings.load(this)
         glView?.applySettings(currentSettings)
-
         glView?.onResume()
         glView?.startSensors()
     }
 
     override fun onPause() {
         super.onPause()
-
         glView?.onPause()
         glView?.stopSensors()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-
         glView?.cleanup()
     }
 }

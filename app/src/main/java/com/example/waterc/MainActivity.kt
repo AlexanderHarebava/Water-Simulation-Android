@@ -24,7 +24,6 @@ class MainActivity : ComponentActivity() {
 
     private var glView: FluidGLSurfaceView? = null
     private val fpsMeter = FpsMeter()
-
     private var currentSettings by mutableStateOf(WatercSettings())
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,29 +61,20 @@ class MainActivity : ComponentActivity() {
                             initialParticleCount = currentSettings.particleCount,
                             initialMpmRenderStyle = currentSettings.mpmRenderStyle,
                             onGridSizeSelected = { size ->
-                                val s = currentSettings.copy(gridSize = size)
-                                currentSettings = s
-                                WatercSettings.save(this@MainActivity, s)
-                                glView?.applySettings(s)
+                                currentSettings = currentSettings.copy(gridSize = size)
+                                glView?.applySettings(currentSettings)
                             },
                             onSimModeSelected = { mode ->
-                                val s = currentSettings.copy(simMode = mode)
-                                currentSettings = s
-                                WatercSettings.save(this@MainActivity, s)
-                                glView?.applySettings(s)
+                                currentSettings = currentSettings.copy(simMode = mode)
+                                glView?.applySettings(currentSettings)
                             },
                             onParticleCountSelected = { count ->
-                                val s = currentSettings.copy(particleCount = count)
-                                currentSettings = s
-
-                                WatercSettings.save(this@MainActivity, s)
-                                glView?.applySettings(s)
+                                currentSettings = currentSettings.copy(particleCount = count)
+                                glView?.applySettings(currentSettings)
                             },
                             onMpmRenderStyleSelected = { style ->
-                                val s = currentSettings.copy(mpmRenderStyle = style)
-                                currentSettings = s
-                                WatercSettings.save(this@MainActivity, s)
-                                glView?.applySettings(s)
+                                currentSettings = currentSettings.copy(mpmRenderStyle = style)
+                                glView?.applySettings(currentSettings)
                             },
                             onApplyClicked = {
                                 applyLiveWallpaper(currentSettings)
@@ -94,7 +84,12 @@ class MainActivity : ComponentActivity() {
                                     Intent(
                                         this@MainActivity,
                                         WallpaperSettingsActivity::class.java
-                                    )
+                                    ).apply {
+                                        putExtra(
+                                            WallpaperSettingsActivity.EXTRA_SETTINGS,
+                                            currentSettings
+                                        )
+                                    }
                                 )
                             },
                             modifier = Modifier.align(Alignment.BottomCenter)
@@ -106,10 +101,12 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun applyLiveWallpaper(settingsToApply: WatercSettings) {
-        // Здесь this — это сама Activity, поэтому ошибок нет
         WatercSettings.save(this, settingsToApply, synchronous = true)
+        WatercSettings.saveApplied(this, settingsToApply, synchronous = true)
         currentSettings = settingsToApply
+
         val component = ComponentName(this, FluidWallpaperService::class.java)
+
         try {
             val intent = Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER).apply {
                 putExtra(

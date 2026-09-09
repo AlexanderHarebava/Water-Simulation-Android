@@ -92,43 +92,30 @@ class FluidGLSurfaceView(
         val w = surfaceW
         val h = surfaceH
         if (w <= 0 || h <= 0) return
-
         val g = settings.effectiveGridSize().toFloat()
         val nx = touchX / w
         val ny = touchY / h
 
 
         val cx = nx * g
-        val cy = (1.0f - ny) * g * 0.75f
-        val cz = ny * g
+        val cy = (1.0f - ny) * g
+        val cz = g * 0.5f
 
         val dx = touchDX
         val dy = touchDY
         val speed = kotlin.math.sqrt(dx * dx + dy * dy)
-
-        val radius = g * 0.35f
+        val radius = g * 0.4f
 
         if (speed > 0.5f) {
-
-            val strength = settings.mpmTouchStrength * 3.5f
+            val strength = settings.mpmTouchStrength * 8.0f
             val fx = (dx / w) * g * strength
-            val fy = 0f
-            val fz = (dy / h) * g * strength
+            val fy = -(dy / h) * g * strength
+            val fz = 0f
             simulation.setPointer(cx, cy, cz, fx, fy, fz, radius)
         } else {
-
-            val holdStrength = settings.mpmTouchStrength * 3.5f
-
-            val fx = 0f
-            val fy = -holdStrength * 0.3f
-            val fz = 0f
-
-
-
-            simulation.setPointer(cx, cy, cz, fx, fy, fz, radius)
+            val holdStrength = settings.mpmTouchStrength * 8.0f
+            simulation.setPointer(cx, cy, cz, 0f, -holdStrength * 0.3f, 0f, radius)
         }
-
-
         touchDX *= 0.7f
         touchDY *= 0.7f
     }

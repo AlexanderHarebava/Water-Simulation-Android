@@ -1,10 +1,9 @@
 package com.example.waterc
 
-import android.R.attr.fontFamily
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
-import android.widget.Space
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
@@ -19,7 +18,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -48,17 +46,21 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.waterc.ui.theme.WatercTheme
-import java.util.Locale
 
 class WallpaperSettingsActivity : ComponentActivity() {
+
+    companion object {
+        const val EXTRA_SETTINGS = "extra_settings"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val initial = WatercSettings.load(this)
+        val initial = readInitialSettings()
+
         setContent {
             WatercTheme {
                 Surface(
@@ -74,6 +76,25 @@ class WallpaperSettingsActivity : ComponentActivity() {
                     )
                 }
             }
+        }
+    }
+
+    private fun readInitialSettings(): WatercSettings {
+        return try {
+            val fromIntent =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    intent.getSerializableExtra(
+                        EXTRA_SETTINGS,
+                        WatercSettings::class.java
+                    )
+                } else {
+                    @Suppress("DEPRECATION")
+                    intent.getSerializableExtra(EXTRA_SETTINGS) as? WatercSettings
+                }
+
+            fromIntent ?: WatercSettings.loadApplied(this)
+        } catch (e: Exception) {
+            WatercSettings.loadApplied(this)
         }
     }
 }
@@ -138,7 +159,6 @@ private fun SettingsScreen(
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         Text(stringResource(R.string.settings_screen_title), fontSize = 22.sp)
-
 
         Section(stringResource(R.string.section_sim_mode)) {
             Row(
@@ -369,14 +389,13 @@ private fun SettingsScreen(
             }
         }
 
-
         Button(onClick = { onSave(currentSettings()) },
             modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.settings_save_button))
         }
+
         OutlinedButton(
             onClick = {
-                WatercSettings.reset(context, synchronous = true)
                 val d = WatercSettings()
                 waterR = d.waterR; waterG = d.waterG; waterB = d.waterB
                 absorption = d.absorption; specular = d.specular
@@ -452,9 +471,9 @@ private fun ExpandableLicenseSection() {
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textDecoration = TextDecoration.Underline,
-                    modifier = Modifier.clickable {
-                    }
+                    modifier = Modifier.clickable { }
                 )
+
                 val uriHandler = LocalUriHandler.current
                 val licenseUrl = "https://github.com/tmarrec/fluid-simulation"
 
@@ -467,12 +486,13 @@ private fun ExpandableLicenseSection() {
                         try {
                             uriHandler.openUri(licenseUrl)
                         } catch (e: Exception) {
-
                             e.printStackTrace()
                         }
                     }
                 )
+
                 Spacer(modifier = Modifier.height(16.dp))
+
                 Text(
                     text = "App License",
                     fontSize = 10.sp,
@@ -480,6 +500,7 @@ private fun ExpandableLicenseSection() {
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
+
                 Text(
                     text = APACHE_LICENSE_TEXT,
                     fontSize = 10.sp,
@@ -493,22 +514,17 @@ private fun ExpandableLicenseSection() {
     }
 }
 
-
 private const val APACHE_LICENSE_TEXT = """
- MIT License
-
+MIT License
 Copyright (c) 2026 Alexander Harebava
-
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
-
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
-
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE

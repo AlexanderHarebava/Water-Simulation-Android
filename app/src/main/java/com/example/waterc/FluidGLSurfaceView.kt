@@ -29,8 +29,8 @@ class FluidGLSurfaceView(
         context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private val accelerometer =
         sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
-    private val gyroscope =
-        sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
+//    private val gyroscope =
+//        sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
 
 
     @Volatile private var touchActive = false
@@ -184,20 +184,16 @@ class FluidGLSurfaceView(
 
             MotionEvent.ACTION_MOVE -> {
                 parent?.requestDisallowInterceptTouchEvent(true)
-
                 val now = System.nanoTime()
                 val dtMs = (now - lastTouchTimeNs) / 1_000_000f
                 val dx = event.x - lastTouchX
                 val dy = event.y - lastTouchY
-
                 touchX = event.x
                 touchY = event.y
-
                 if (dtMs > 0f && dtMs < 200f) {
                     touchDX = touchDX * 0.5f + dx * 0.5f
                     touchDY = touchDY * 0.5f + dy * 0.5f
                 }
-
                 lastTouchX = event.x
                 lastTouchY = event.y
                 lastTouchTimeNs = now
@@ -205,6 +201,9 @@ class FluidGLSurfaceView(
                 queueEvent {
                     if (settings.simMode == FluidSimulation.MODE_MPM) {
                         applyMpmTouchForce()
+                    } else {
+                        val sensitivity = 0.005f * settings.tiltSensitivity
+                        simulation.rotateCamera(dx * sensitivity, -dy * sensitivity)
                     }
                 }
             }
@@ -236,9 +235,9 @@ class FluidGLSurfaceView(
         accelerometer?.let {
             sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME)
         }
-        gyroscope?.let {
-            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME)
-        }
+//        gyroscope?.let {
+//            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME)
+//        }
     }
 
     fun stopSensors() {
@@ -249,9 +248,9 @@ class FluidGLSurfaceView(
     private var lowPassY = -2f
     private var lowPassZ = 0f
     private val alpha = 0.15f
-    private var lastGyroTimeNs = 0L
-    private val gyroSensitivity = 1.0f
-    private val gyroDeadZone = 0.05f
+//    private var lastGyroTimeNs = 0L
+//    private val gyroSensitivity = 1.0f
+//    private val gyroDeadZone = 0.05f
 
     override fun onSensorChanged(event: SensorEvent) {
         when (event.sensor.type) {
@@ -270,25 +269,6 @@ class FluidGLSurfaceView(
                 simulation.setGravity(lowPassX, lowPassY, lowPassZ)
             }
 
-            Sensor.TYPE_GYROSCOPE -> {
-                if (settings.simMode == FluidSimulation.MODE_MPM) return
-                val rx = event.values[0]
-                val ry = event.values[1]
-                val now = event.timestamp
-                if (lastGyroTimeNs != 0L) {
-                    val dt = (now - lastGyroTimeNs) / 1_000_000_000f
-                    if (dt > 0f && dt < 0.5f) {
-                        val mag = kotlin.math.sqrt(rx * rx + ry * ry)
-                        if (mag > gyroDeadZone) {
-                            val sensitivity = settings.tiltSensitivity
-                            val yawDelta = -ry * dt * sensitivity
-                            val pitchDelta = -rx * dt * sensitivity
-                            simulation.rotateCamera(yawDelta, pitchDelta)
-                        }
-                    }
-                }
-                lastGyroTimeNs = now
-            }
         }
     }
 

@@ -237,7 +237,7 @@ void main() {
     vec3 vel = vec3(decodeF(cells[id].vx), decodeF(cells[id].vy),
                     decodeF(cells[id].vz)) / max(mass, 0.0001);
     vel += uGravity * uDt;
-float maxVel = 15.0;
+float maxVel = 10.0;
 if (length(vel) > maxVel) {
     vel = normalize(vel) * maxVel;
 }

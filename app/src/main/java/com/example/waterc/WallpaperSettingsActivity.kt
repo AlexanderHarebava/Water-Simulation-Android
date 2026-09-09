@@ -361,14 +361,6 @@ private fun SettingsScreen(
                 valueRange = 15f..120f, modifier = Modifier.fillMaxWidth())
         }
 
-        Section(stringResource(R.string.section_grid_size)) {
-            Text(stringResource(R.string.label_grid_size_value, gridSize))
-            Slider(value = gridSize.toFloat(),
-                onValueChange = { gridSize = it.toInt().coerceIn(16, 128) },
-                valueRange = 16f..128f, modifier = Modifier.fillMaxWidth())
-            Text(stringResource(R.string.hint_grid_size), fontSize = 11.sp)
-        }
-
         Section(stringResource(R.string.section_accelerometer)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Switch(checked = accelEnabled, onCheckedChange = { accelEnabled = it })

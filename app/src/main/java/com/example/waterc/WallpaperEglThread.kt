@@ -239,17 +239,7 @@ class WallpaperEglThread(
                     try {
 
 
-                        val now = System.nanoTime()
-                        if (lastStepTimeNs != 0L) {
-                            accumulatorNs += (now - lastStepTimeNs).coerceAtMost(100_000_000L)
-                        }
-                        lastStepTimeNs = now
-
-                        while (accumulatorNs >= stepIntervalNs) {
-                            simulation.step()
-                            accumulatorNs -= stepIntervalNs
-                        }
-
+                        simulation.step()
                         simulation.render()
 
                         if (!EGL14.eglSwapBuffers(display, eglSurface)) {

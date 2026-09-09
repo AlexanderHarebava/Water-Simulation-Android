@@ -12,6 +12,7 @@ import android.view.SurfaceHolder
 import com.example.waterc.WatercSettings.Companion.effectiveGridSize
 
 class FluidWallpaperService : WallpaperService() {
+
     companion object {
         private const val TAG = "FluidWallpaper"
     }
@@ -19,20 +20,22 @@ class FluidWallpaperService : WallpaperService() {
     override fun onCreateEngine(): Engine = FluidEngine()
 
     inner class FluidEngine : Engine(), SensorEventListener {
+
         private val sensorManager: SensorManager =
             getSystemService(Context.SENSOR_SERVICE) as SensorManager
         private val accelerometer: Sensor? =
             sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+
         private var eglThread: WallpaperEglThread? = null
         private var simulation: FluidSimulation? = null
         private lateinit var settings: WatercSettings
         private var surfaceW = 0
         private var surfaceH = 0
+
         private var lowPassX = 0f
         private var lowPassY = -2f
         private var lowPassZ = 0f
         private val alpha = 0.15f
-
 
         @Volatile private var touchActive = false
         @Volatile private var touchX = 0f
@@ -46,12 +49,12 @@ class FluidWallpaperService : WallpaperService() {
             super.onCreate(surfaceHolder)
             setTouchEventsEnabled(true)
             Log.i(TAG, "Engine.onCreate")
-            settings = WatercSettings.load(this@FluidWallpaperService)
+            settings = WatercSettings.loadApplied(this@FluidWallpaperService)
             loadPrefs()
         }
 
         private fun loadPrefs() {
-            settings = WatercSettings.load(this@FluidWallpaperService)
+            settings = WatercSettings.loadApplied(this@FluidWallpaperService)
             Log.i(TAG, "loadPrefs: gridSize=${settings.gridSize}, accel=${settings.accelEnabled}")
         }
 
@@ -89,24 +92,23 @@ class FluidWallpaperService : WallpaperService() {
             }
         }
 
-
-
         fun applyTouchForce() {
             if (!touchActive) return
             val sim = simulation ?: return
             val w = surfaceW
             val h = surfaceH
             if (w <= 0 || h <= 0) return
+
             val g = settings.effectiveGridSize().toFloat()
             val nx = touchX / w
             val ny = touchY / h
-
             val cx = nx * g
             val cy = (1.0f - ny) * g
             val cz = g * 0.5f
             val radius = g * 0.4f
 
             val speed = kotlin.math.sqrt(touchDX * touchDX + touchDY * touchDY)
+
             if (speed > 0.5f) {
                 val strength = settings.mpmTouchStrength * 8.0f
                 val fx = (touchDX / w) * g * strength
@@ -116,6 +118,7 @@ class FluidWallpaperService : WallpaperService() {
                 val holdStrength = settings.mpmTouchStrength * 8.0f
                 sim.setPointer(cx, cy, cz, 0f, -holdStrength * 0.3f, 0f, radius)
             }
+
             touchDX *= 0.7f
             touchDY *= 0.7f
         }
@@ -124,8 +127,10 @@ class FluidWallpaperService : WallpaperService() {
             super.onSurfaceCreated(holder)
             Log.i(TAG, "onSurfaceCreated")
             val h = holder ?: return
-            val saved = WatercSettings.load(this@FluidWallpaperService)
+
+            val saved = WatercSettings.loadApplied(this@FluidWallpaperService)
             val existing = eglThread
+
             if (existing != null && existing.isStarted()) {
                 if (saved.effectiveGridSize() != settings.effectiveGridSize()) {
                     Log.i(TAG, "GridSize changed, recreating")
@@ -139,6 +144,7 @@ class FluidWallpaperService : WallpaperService() {
                 }
                 return
             }
+
             settings = saved
             createThread(h, settings)
         }
@@ -192,7 +198,8 @@ class FluidWallpaperService : WallpaperService() {
         }
 
         private fun checkSettingsAndRecreateIfNeeded() {
-            val newSettings = WatercSettings.load(this@FluidWallpaperService)
+            val newSettings = WatercSettings.loadApplied(this@FluidWallpaperService)
+
             if (newSettings.effectiveGridSize() != settings.effectiveGridSize()) {
                 Log.i(TAG, "Visibility triggered gridSize change: " +
                         "${settings.gridSize} -> ${newSettings.gridSize}")

@@ -97,28 +97,25 @@ class FluidWallpaperService : WallpaperService() {
             val w = surfaceW
             val h = surfaceH
             if (w <= 0 || h <= 0) return
-
             val g = settings.effectiveGridSize().toFloat()
             val nx = touchX / w
             val ny = touchY / h
+
             val cx = nx * g
-            val cy = (1.0f - ny) * g * 0.75f
-            val cz = ny * g
-            val radius = g * 0.35f
+            val cy = (1.0f - ny) * g
+            val cz = g * 0.5f
+            val radius = g * 0.4f
 
             val speed = kotlin.math.sqrt(touchDX * touchDX + touchDY * touchDY)
-
             if (speed > 0.5f) {
-                val strength = settings.mpmTouchStrength * 3.5f
+                val strength = settings.mpmTouchStrength * 8.0f
                 val fx = (touchDX / w) * g * strength
-                val fz = (touchDY / h) * g * strength
-                sim.setPointer(cx, cy, cz, fx, 0f, fz, radius)
+                val fy = -(touchDY / h) * g * strength
+                sim.setPointer(cx, cy, cz, fx, fy, 0f, radius)
             } else {
-
-                val holdStrength = settings.mpmTouchStrength * 3.5f
+                val holdStrength = settings.mpmTouchStrength * 8.0f
                 sim.setPointer(cx, cy, cz, 0f, -holdStrength * 0.3f, 0f, radius)
             }
-
             touchDX *= 0.7f
             touchDY *= 0.7f
         }

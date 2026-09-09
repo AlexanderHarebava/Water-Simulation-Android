@@ -42,6 +42,9 @@ class MainActivity : ComponentActivity() {
                             factory = { context ->
                                 FluidGLSurfaceView(context, currentSettings).also { view ->
                                     view.fpsMeter = fpsMeter
+                                    view.isClickable = true
+                                    view.isFocusable = true
+                                    view.isFocusableInTouchMode = true
                                     glView = view
                                 }
                             },

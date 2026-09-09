@@ -2,8 +2,10 @@
 <data-extraction-rules>
     <cloud-backup>
         <include domain="sharedpref" path="waterc_wallpaper.xml" />
+        <include domain="sharedpref" path="waterc_wallpaper_applied.xml" />
     </cloud-backup>
     <device-transfer>
         <include domain="sharedpref" path="waterc_wallpaper.xml" />
+        <include domain="sharedpref" path="waterc_wallpaper_applied.xml" />
     </device-transfer>
 </data-extraction-rules>

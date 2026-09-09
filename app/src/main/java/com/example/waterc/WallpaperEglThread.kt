@@ -19,6 +19,7 @@ class WallpaperEglThread(
         private const val TAG = "WallpaperEGL"
         private const val EGL_RECORDABLE_ANDROID = 0x3142
         private const val EGL_OPENGL_ES2_BIT = 0x04
+
     }
 
     @Volatile private var running = false
@@ -28,7 +29,9 @@ class WallpaperEglThread(
     @Volatile private var surfaceDirty = false
     private var thread: Thread? = null
     private var appliedSettings: WatercSettings? = null
-
+    private var lastStepTimeNs = 0L
+    private var accumulatorNs = 0L
+    private val stepIntervalNs = 1_000_000_000L / 60L
     fun setSize(w: Int, h: Int) {
         width = w
         height = h
@@ -193,6 +196,8 @@ class WallpaperEglThread(
                         simInited = true
                     }
                     simulation.resize(surfW, surfH)
+                    lastStepTimeNs = 0L
+                    accumulatorNs = 0L
                     Log.i(TAG, "EGL surface (re)created: ${surfW}x${surfH}")
                 }
 
@@ -214,6 +219,8 @@ class WallpaperEglThread(
                         simulation.resize(curWidth, curHeight)
                         simulation.applyVisualSettings(newSettings)
                         appliedSettings = newSettings
+                        lastStepTimeNs = 0L
+                        accumulatorNs = 0L
                     } else if (oldSettings != newSettings) {
                         if (newSettings.simMode == FluidSimulation.MODE_MPM &&
                             oldSettings != null &&
@@ -230,8 +237,21 @@ class WallpaperEglThread(
 
                     val frameStart = System.nanoTime()
                     try {
-                        simulation.step()
+
+
+                        val now = System.nanoTime()
+                        if (lastStepTimeNs != 0L) {
+                            accumulatorNs += (now - lastStepTimeNs).coerceAtMost(100_000_000L)
+                        }
+                        lastStepTimeNs = now
+
+                        while (accumulatorNs >= stepIntervalNs) {
+                            simulation.step()
+                            accumulatorNs -= stepIntervalNs
+                        }
+
                         simulation.render()
+
                         if (!EGL14.eglSwapBuffers(display, eglSurface)) {
                             Log.w(TAG, "eglSwapBuffers failed: 0x" + Integer.toHexString(EGL14.eglGetError()))
                             EGL14.eglMakeCurrent(display, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_CONTEXT)

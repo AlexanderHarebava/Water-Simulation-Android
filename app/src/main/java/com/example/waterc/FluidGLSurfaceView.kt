@@ -45,7 +45,9 @@ class FluidGLSurfaceView(
     init {
         setEGLContextClientVersion(3)
         setEGLConfigChooser(8, 8, 8, 8, 16, 0)
-
+        isClickable = true
+        isFocusable = true
+        isFocusableInTouchMode = true
         setRenderer(object : Renderer {
             override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
                 simulation.init(settings.effectiveGridSize(), settings.simMode)
@@ -69,17 +71,13 @@ class FluidGLSurfaceView(
             private val stepIntervalNs = 1_000_000_000L / 60L
 
             override fun onDrawFrame(gl: GL10?) {
-                val now = System.nanoTime()
-                if (lastTimeNs != 0L) {
-                    accumulatorNs += (now - lastTimeNs).coerceAtMost(100_000_000L)
-                }
-                lastTimeNs = now
+                fpsMeter?.onFrame(System.nanoTime())
 
-                while (accumulatorNs >= stepIntervalNs) {
-                    simulation.step()
-                    accumulatorNs -= stepIntervalNs
+                if (settings.simMode == FluidSimulation.MODE_MPM && touchActive) {
+                    applyMpmTouchForce()
                 }
 
+                simulation.step()
                 simulation.render()
             }
         })
@@ -91,31 +89,39 @@ class FluidGLSurfaceView(
     private fun applyMpmTouchForce() {
         val w = surfaceW
         val h = surfaceH
+
+        android.util.Log.d(
+            "FluidTouch",
+            "applyMpmTouchForce: w=$w h=$h touchActive=$touchActive " +
+                    "mode=${settings.simMode} dx=$touchDX dy=$touchDY"
+        )
+
         if (w <= 0 || h <= 0) return
+
         val g = settings.effectiveGridSize().toFloat()
         val nx = touchX / w
         val ny = touchY / h
 
-
         val cx = nx * g
-        val cy = (1.0f - ny) * g
-        val cz = g * 0.5f
+        val cy = (1.0f - ny) * g * 0.75f
+        val cz = ny * g
 
         val dx = touchDX
         val dy = touchDY
         val speed = kotlin.math.sqrt(dx * dx + dy * dy)
-        val radius = g * 0.4f
+        val radius = g * 0.35f
 
         if (speed > 0.5f) {
-            val strength = settings.mpmTouchStrength * 8.0f
+            val strength = settings.mpmTouchStrength * 3.5f
             val fx = (dx / w) * g * strength
-            val fy = -(dy / h) * g * strength
-            val fz = 0f
+            val fy = 0f
+            val fz = (dy / h) * g * strength
             simulation.setPointer(cx, cy, cz, fx, fy, fz, radius)
         } else {
-            val holdStrength = settings.mpmTouchStrength * 8.0f
+            val holdStrength = settings.mpmTouchStrength * 3.5f
             simulation.setPointer(cx, cy, cz, 0f, -holdStrength * 0.3f, 0f, radius)
         }
+
         touchDX *= 0.7f
         touchDY *= 0.7f
     }
@@ -157,27 +163,35 @@ class FluidGLSurfaceView(
 
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
+                parent?.requestDisallowInterceptTouchEvent(true)
+
                 lastTouchX = event.x
                 lastTouchY = event.y
                 lastTouchTimeNs = System.nanoTime()
+
                 touchX = event.x
                 touchY = event.y
                 touchDX = 0f
                 touchDY = 0f
                 touchActive = true
+
+                queueEvent {
+                    if (settings.simMode == FluidSimulation.MODE_MPM) {
+                        applyMpmTouchForce()
+                    }
+                }
             }
 
             MotionEvent.ACTION_MOVE -> {
+                parent?.requestDisallowInterceptTouchEvent(true)
+
                 val now = System.nanoTime()
                 val dtMs = (now - lastTouchTimeNs) / 1_000_000f
-
                 val dx = event.x - lastTouchX
                 val dy = event.y - lastTouchY
 
-
                 touchX = event.x
                 touchY = event.y
-
 
                 if (dtMs > 0f && dtMs < 200f) {
                     touchDX = touchDX * 0.5f + dx * 0.5f
@@ -187,17 +201,29 @@ class FluidGLSurfaceView(
                 lastTouchX = event.x
                 lastTouchY = event.y
                 lastTouchTimeNs = now
+
+                queueEvent {
+                    if (settings.simMode == FluidSimulation.MODE_MPM) {
+                        applyMpmTouchForce()
+                    }
+                }
             }
 
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                parent?.requestDisallowInterceptTouchEvent(false)
+
                 touchActive = false
                 touchDX = 0f
                 touchDY = 0f
-                if (settings.simMode == FluidSimulation.MODE_MPM) {
-                    simulation.releasePointer()
+
+                queueEvent {
+                    if (settings.simMode == FluidSimulation.MODE_MPM) {
+                        simulation.releasePointer()
+                    }
                 }
             }
         }
+
         return true
     }
 

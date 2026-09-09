@@ -475,8 +475,6 @@ void FluidsMPMGPU::init(int gridX, int gridY, int gridZ,
     _maxParticles = maxParticles;
     _numParticles = 0;
 
-    __android_log_print(ANDROID_LOG_INFO, TAG_MPM,
-                        "init: grid=%dx%dx%d particles=%d", gridX, gridY, gridZ, maxParticles);
 
     compileShader(_progClear,   CLEAR_GRID_SRC);
     compileShader(_progP2G1,    P2G1_SRC);
@@ -517,8 +515,7 @@ void FluidsMPMGPU::init(int gridX, int gridY, int gridZ,
 
     _initialized = true;
     _particlesDirty = false;
-    __android_log_print(ANDROID_LOG_INFO, TAG_MPM,
-                        "initialized: particles=%d scenario=%d", _numParticles, _scenario);
+
 }
 
 void FluidsMPMGPU::initParticles() {
@@ -795,6 +792,7 @@ void FluidsMPMGPU::dispatchUpdateGrid() {
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, _ssboCells);
     glDispatchCompute((_gridCount + 63) / 64, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
 }
 
 void FluidsMPMGPU::dispatchG2P() {

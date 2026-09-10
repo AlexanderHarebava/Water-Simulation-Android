@@ -37,7 +37,7 @@ data class WatercSettings(
         const val PREFS_NAME_APPLIED = "waterc_wallpaper_applied"
 
         const val KEY_SIM_SPEED = "sim_speed"
-        const val DEFAULT_SIM_SPEED = 1.0f
+        const val DEFAULT_SIM_SPEED = 0.65f
 
         const val KEY_WATER_R = "water_r"
         const val KEY_WATER_G = "water_g"
